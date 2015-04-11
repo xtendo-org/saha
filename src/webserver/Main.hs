@@ -35,6 +35,8 @@ serveNormal url
         ".jpg"  -> serve "image/jpeg" $ B.drop 1 url
         ".png"  -> serve "image/png" $ B.drop 1 url
         _       -> notFound
+    | url == "/favicon.ico" = serve "image/vnd.microsoft.icon"
+        "static/img/favicon.ico"
     | url == "/" = serve "text/html; charset=utf-8" $ htmlpath "index/"
     | "/" `B.isSuffixOf` url = serve "text/html; charset=utf-8" $ htmlpath url
     | otherwise = notFound
