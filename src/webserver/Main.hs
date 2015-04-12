@@ -2,6 +2,8 @@
 
 module Main where
 
+import Control.Monad
+
 import Data.Char
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
@@ -12,13 +14,18 @@ import qualified Network.Wai.Handler.Warp as Warp
 
 import ModifiedTime
 
+c_DEBUG :: Bool
+c_DEBUG = False
+
 main :: IO ()
-main = do
-    Warp.runSettings (Warp.defaultSettings) app
+main = if c_DEBUG
+    then Warp.runSettings
+        (Warp.setFdCacheDuration 0 $ Warp.defaultSettings) app
+    else Warp.runSettings Warp.defaultSettings app
 
 app :: Wai.Application
 app req respond = do
-    print url
+    when c_DEBUG $ print url
     if isSafeURL url
         then serveNormal respond url
         else respond notFound
