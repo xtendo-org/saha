@@ -38,6 +38,7 @@ serveNormal respond url
     | "/static/img/" `B.isPrefixOf` url = case rtake 4 url of
         ".jpg"  -> serve "image/jpeg" $ B.drop 1 url
         ".png"  -> serve "image/png" $ B.drop 1 url
+        ".svg"  -> serve "image/svg+xml" $ B.drop 1 url
         _       -> respond notFound
     | url == "/favicon.ico" = serve "image/vnd.microsoft.icon"
         "static/img/favicon.ico"
