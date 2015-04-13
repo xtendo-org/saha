@@ -47,6 +47,9 @@ serveNormal respond url
         ".png"  -> serve "image/png" $ B.drop 1 url
         ".svg"  -> serve "image/svg+xml" $ B.drop 1 url
         _       -> respond notFound
+    | "/static/doc/" `B.isPrefixOf` url = case rtake 4 url of
+        ".pdf"  -> serve "application/pdf" $ B.drop 1 url
+        _       -> respond notFound
     | url == "/favicon.ico" = serve "image/vnd.microsoft.icon"
         "static/img/favicon.ico"
     | url == "/" = serve htmlctype $ htmlpath "index/"
