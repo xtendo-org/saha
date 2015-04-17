@@ -27,6 +27,7 @@ executable haskell-kr-webserver
     directory,
     base >=4.8 && <4.9
   hs-source-dirs:   src/webserver
+  ghc-options: -static -optl-pthread -optl-static -Wall -O2
   default-language: Haskell2010
 
 executable haskell-kr-mdcompiler
@@ -42,4 +43,5 @@ executable haskell-kr-mdcompiler
     cmark == 0.3.*,
     base >=4.8 && <4.9
   hs-source-dirs:   src/mdcompiler
+  ghc-options: -Wall -O2
   default-language: Haskell2010
