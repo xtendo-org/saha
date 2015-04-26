@@ -59,7 +59,7 @@ main = do
             forM_ tpl $ \ seg -> hPutStr ohdl $ case seg of
                 TextSegment t -> t
                 Variable var -> if var == "content"
-                    then commonmarkToHtml [] content
+                    then commonmarkToHtml [optSmart] content
                     else maybe (noSuchHeader var) id (lookup var headers)
         setFileTimes path mtime mtime
 
