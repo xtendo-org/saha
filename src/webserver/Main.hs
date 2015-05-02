@@ -41,7 +41,9 @@ serveNormal
     :: (Wai.Response -> IO Wai.ResponseReceived)
     -> ByteString -> IO Wai.ResponseReceived
 serveNormal respond url
-    | url == "/static/css/main.css" = serve "text/css" $ B.drop 1 url
+    | "/static/css/" `B.isPrefixOf` url = case rtake 4 url of
+        ".css"  -> serve "text/css" $ B.drop 1 url
+        _       -> respond notFound
     | "/static/img/" `B.isPrefixOf` url = case rtake 4 url of
         ".jpg"  -> serve "image/jpeg" $ B.drop 1 url
         ".png"  -> serve "image/png" $ B.drop 1 url
