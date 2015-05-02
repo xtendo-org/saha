@@ -56,12 +56,12 @@ serveNormal respond url
         "static/img/favicon.ico"
     | url == "/robots.txt" = serve "text/plain"
         "robots.txt"
-    | url == "/" = serve htmlctype $ htmlpath "index/"
+    | url == "/" = serve htmlctype $ htmlpath "/index/"
     | "/" `B.isSuffixOf` url = serve htmlctype $ htmlpath url
     | otherwise = respond notFound
   where
     htmlctype = "text/html; charset=utf-8"
-    htmlpath path = "output/" `mappend` B.init path `mappend` ".html"
+    htmlpath path = "output" `mappend` B.init path `mappend` ".html"
     serve ctype path = do
         stamp <- fmap B.pack $ getMTimeForHTTP (B.unpack path)
         respond $ Wai.responseFile status200
