@@ -52,6 +52,8 @@ serveNormal respond url
         _       -> respond notFound
     | url == "/favicon.ico" = serve "image/vnd.microsoft.icon"
         "static/img/favicon.ico"
+    | url == "/robots.txt" = serve "text/plain"
+        "robots.txt"
     | url == "/" = serve htmlctype $ htmlpath "index/"
     | "/" `B.isSuffixOf` url = serve htmlctype $ htmlpath url
     | otherwise = respond notFound
