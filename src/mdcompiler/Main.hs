@@ -40,15 +40,19 @@ main = do
         (headers, content) <- maybeAct (source fullText) $ do
             print path
             error "source file header parsing failed"
-        let
-            go = do
-                createDirectoryIfMissing True $ stDSTDIR ++ dir
-                writeOut mtime targetPath tpl headers content
-        target <- tryIOError $ getMTime targetPath
-        case target of
-            Left _ -> go
-            Right t -> if mtime == t then return () else go
+        checkPublicity headers $ do
+            let
+                go = do
+                    createDirectoryIfMissing True $ stDSTDIR ++ dir
+                    writeOut mtime targetPath tpl headers content
+            target <- tryIOError $ getMTime targetPath
+            case target of
+                Left _ -> go
+                Right t -> if mtime == t then return () else go
   where
+    checkPublicity headers action = case lookup "publicity" headers of
+        Nothing -> action
+        Just v -> if v /= "hidden" then action else return ()
     getMTime = fmap modificationTime . getFileStatus
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
     isMd path = (".md" :: FilePath) `isSuffixOf` path
