@@ -9,6 +9,7 @@ import System.Posix.Files
 import Data.List (isSuffixOf)
 
 import Prelude hiding (readFile)
+import Data.Text (unpack)
 import Data.Text.IO (readFile, hPutStr)
 import System.IO (withFile, IOMode(..))
 import System.IO.Error
@@ -24,11 +25,11 @@ stDSTDIR :: FilePath
 stDSTDIR = "output"
 
 stTPL_PATH :: FilePath
-stTPL_PATH = "tpl/main.html"
+stTPL_PATH = "tpl/"
 
 main :: IO ()
 main = do
-    tpl <- fmap template $ readFile stTPL_PATH
+    mainTpl <- fmap template $ readFile $ stTPL_PATH ++ "main.html"
     files <- getRecursiveContents stSRCDIR
     forM_ files $ \ path -> if not (isMd path) then return () else do
         let
@@ -42,7 +43,12 @@ main = do
             error "source file header parsing failed"
         checkPublicity headers $ do
             let
+                getTpl = case (lookup "template" headers) of
+                    Nothing -> return mainTpl
+                    Just v -> fmap template $
+                        readFile $ stTPL_PATH ++ unpack v
                 go = do
+                    tpl <- getTpl
                     createDirectoryIfMissing True $ stDSTDIR ++ dir
                     writeOut mtime targetPath tpl headers content
             target <- tryIOError $ getMTime targetPath
