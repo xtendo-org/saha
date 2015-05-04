@@ -12,16 +12,24 @@ import Network.HTTP.Types
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
 
+import UnixSocket
 import ModifiedTime
 
 c_DEBUG :: Bool
 c_DEBUG = False
 
+c_UNIX_PATH :: String
+c_UNIX_PATH = "/tmp/starplate.socket"
+
 main :: IO ()
-main = if c_DEBUG
-    then Warp.runSettings
-        (Warp.setFdCacheDuration 0 $ Warp.defaultSettings) app
-    else Warp.runSettings Warp.defaultSettings app
+main = do
+    sock <- unixSocket c_UNIX_PATH
+    if c_DEBUG
+        then Warp.runSettingsSocket
+            (Warp.setFdCacheDuration 0 settings) sock app
+        else Warp.runSettingsSocket settings sock app
+  where
+    settings = Warp.setPort 3000 $ Warp.defaultSettings
 
 app :: Wai.Application
 app req respond = do

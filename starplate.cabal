@@ -19,6 +19,7 @@ executable starplate
     http-types == 0.8.*,
     wai == 3.0.*,
     warp == 3.0.*,
+    network,
     time,
     directory,
     base >=4.8 && <4.9
