@@ -19,6 +19,8 @@ executable starplate
     http-types == 0.8.*,
     wai == 3.0.*,
     warp == 3.0.*,
+    http-date,
+    unix,
     network,
     time,
     directory,

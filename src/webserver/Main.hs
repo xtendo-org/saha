@@ -35,7 +35,7 @@ app :: Wai.Application
 app req respond = do
     when c_DEBUG $ print url
     if isSafeURL url
-        then serveNormal respond url
+        then serveNormal req respond url
         else respond notFound
   where
     url = Wai.rawPathInfo req
@@ -45,10 +45,14 @@ notFound = Wai.responseLBS status404
     [(hContentType, "text/plain")]
     "Page not found"
 
+notModified :: Wai.Response
+notModified = Wai.responseLBS status304 [] ""
+
 serveNormal
-    :: (Wai.Response -> IO Wai.ResponseReceived)
+    :: Wai.Request
+    -> (Wai.Response -> IO Wai.ResponseReceived)
     -> ByteString -> IO Wai.ResponseReceived
-serveNormal respond url
+serveNormal req respond url
     | "/static/css/" `B.isPrefixOf` url = case rtake 4 url of
         ".css"  -> serve "text/css" $ B.drop 1 url
         _       -> respond notFound
@@ -71,12 +75,14 @@ serveNormal respond url
     htmlctype = "text/html; charset=utf-8"
     htmlpath path = "output" `mappend` B.init path `mappend` ".html"
     serve ctype path = do
-        stamp <- fmap B.pack $ getMTimeForHTTP (B.unpack path)
-        respond $ Wai.responseFile status200
-            [ (hContentType, ctype)
-            , (hLastModified, stamp)
-            ]
-            (B.unpack path) Nothing
+        mtime <- getMTime path
+        case modifiedSince req mtime of
+            NotModified -> respond notModified
+            Modified -> respond $ Wai.responseFile status200
+                [ (hContentType, ctype)
+                , (hLastModified, formattedMTime mtime)
+                ]
+                (B.unpack path) Nothing
 
 rtake :: Int -> ByteString -> ByteString
 rtake n b = B.drop (B.length b - n) b
