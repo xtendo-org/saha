@@ -4,12 +4,14 @@ module Main where
 
 import Control.Monad
 import System.Directory
-import System.FilePath
+    (getDirectoryContents, doesDirectoryExist, createDirectoryIfMissing)
+import System.FilePath (dropExtension, splitFileName, (</>))
+import System.Posix.Types (EpochTime)
 import System.Posix.Files
 import Data.List (isSuffixOf)
 
 import Prelude hiding (readFile)
-import Data.Text (unpack)
+import Data.Text (Text, unpack)
 import Data.Text.IO (readFile, hPutStr)
 import System.IO (withFile, IOMode(..))
 import System.IO.Error
@@ -29,7 +31,7 @@ stTPL_PATH = "tpl/"
 
 main :: IO ()
 main = do
-    mainTpl <- fmap template $ readFile $ stTPL_PATH ++ "main.html"
+    (mainTpl, mainTplMTime) <- getTemplate (stTPL_PATH ++ "main.html")
     files <- getRecursiveContents stSRCDIR
     forM_ files $ \ path -> if not (isMd path) then return () else do
         let
@@ -42,36 +44,47 @@ main = do
             print path
             error "source file header parsing failed"
         checkPublicity headers $ do
+            (tpl, tplMTime) <- case (lookup "template" headers) of
+                Nothing -> return (mainTpl, mainTplMTime)
+                Just v -> getTemplate (stTPL_PATH ++ unpack v)
             let
-                getTpl = case (lookup "template" headers) of
-                    Nothing -> return mainTpl
-                    Just v -> fmap template $
-                        readFile $ stTPL_PATH ++ unpack v
-                go = do
-                    tpl <- getTpl
+                maxMTime = max mtime tplMTime
+                doTheCopy = do
                     createDirectoryIfMissing True $ stDSTDIR ++ dir
-                    writeOut mtime targetPath tpl headers content
-            target <- tryIOError $ getMTime targetPath
-            case target of
-                Left _ -> go
-                Right t -> if mtime == t then return () else go
+                    writeOut maxMTime
+                        targetPath tpl headers content
+            targetMTime <- tryIOError $ getMTime targetPath
+            case targetMTime of
+                Left _ -> doTheCopy
+                Right t ->  if t < maxMTime then doTheCopy else return ()
   where
     checkPublicity headers action = case lookup "publicity" headers of
         Nothing -> action
-        Just v -> if v /= "hidden" then action else return ()
-    getMTime = fmap modificationTime . getFileStatus
-    noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
+        Just v -> if v == "hidden" then return () else action
     isMd path = (".md" :: FilePath) `isSuffixOf` path
     maybeAct m a = maybe a return m
-    writeOut mtime path tpl headers content = do
-        putStrLn path
-        withFile path WriteMode $ \ ohdl ->
-            forM_ tpl $ \ seg -> hPutStr ohdl $ case seg of
-                TextSegment t -> t
-                Variable var -> if var == "content"
-                    then commonmarkToHtml [optSmart] content
-                    else maybe (noSuchHeader var) id (lookup var headers)
-        setFileTimes path mtime mtime
+
+getTemplate :: FilePath -> IO ([Template], EpochTime)
+getTemplate path = do
+    tpl <- fmap template $ readFile path
+    mtime <- getMTime path
+    return (tpl, mtime)
+
+writeOut
+    :: EpochTime -> FilePath -> [Template] -> [(Text, Text)]
+    -> Text
+    -> IO ()
+writeOut mtime path tpl headers content = do
+    putStrLn path
+    withFile path WriteMode $ \ ohdl ->
+        forM_ tpl $ \ seg -> hPutStr ohdl $ case seg of
+            TextSegment t -> t
+            Variable var -> if var == "content"
+                then commonmarkToHtml [optSmart] content
+                else maybe (noSuchHeader var) id (lookup var headers)
+    setFileTimes path mtime mtime
+  where
+    noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents topdir = do
@@ -84,3 +97,6 @@ getRecursiveContents topdir = do
             then getRecursiveContents path
             else return [path]
     return (concat paths)
+
+getMTime :: FilePath -> IO EpochTime
+getMTime = fmap modificationTime . getFileStatus
