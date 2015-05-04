@@ -20,6 +20,7 @@ executable starplate
     wai == 3.0.*,
     warp == 3.0.*,
     http-date,
+    cmdargs == 0.10.*,
     unix,
     network,
     time,

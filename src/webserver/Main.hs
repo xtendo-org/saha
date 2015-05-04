@@ -2,7 +2,7 @@
 
 module Main where
 
-import Control.Monad
+import Data.Maybe
 
 import Data.Char
 import Data.ByteString (ByteString)
@@ -12,28 +12,45 @@ import Network.HTTP.Types
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
 
+import System.Console.CmdArgs.Explicit
+
 import UnixSocket
 import ModifiedTime
-
-c_DEBUG :: Bool
-c_DEBUG = False
 
 c_UNIX_PATH :: String
 c_UNIX_PATH = "/tmp/starplate.socket"
 
+arguments :: Mode [(Char, String)]
+arguments = mode "starplate" [] "Starplate HTTP Server"
+    (flagArg (upd 'c') "CONFIGFILE")
+    [ flagReq ["socket","s"]
+        (upd 's') "PATH" "Unix domain socket path"
+    , flagNone ["debug", "d"]
+        (('d', "") :) "Run the server in the debug mode or not"
+    , flagHelpSimple (('h', "") :)
+    ]
+  where
+    upd msg x v = Right $ (msg, x) : v
+
 main :: IO ()
 main = do
-    sock <- unixSocket c_UNIX_PATH
-    if c_DEBUG
-        then Warp.runSettingsSocket
-            (Warp.setFdCacheDuration 0 settings) sock app
-        else Warp.runSettingsSocket settings sock app
+    args <- processArgs arguments
+    printHelpAndQuitOr args $ do
+        let sockPath = fromMaybe c_UNIX_PATH (lookup 's' args)
+        putStrLn $ "Starplate is opening at " ++ sockPath ++ " .."
+        sock <- unixSocket sockPath
+        if  ('d', "") `elem` args
+            then Warp.runSettingsSocket
+                (Warp.setFdCacheDuration 0 settings) sock app
+            else Warp.runSettingsSocket settings sock app
   where
     settings = Warp.setPort 3000 $ Warp.defaultSettings
+    printHelpAndQuitOr args action = if ('h', "") `elem` args
+        then print $ helpText [] HelpFormatDefault arguments
+        else action
 
 app :: Wai.Application
 app req respond = do
-    when c_DEBUG $ print url
     if isSafeURL url
         then serveNormal req respond url
         else respond notFound
