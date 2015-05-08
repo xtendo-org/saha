@@ -3,6 +3,7 @@
 module Main where
 
 import Data.Maybe
+import System.IO.Error
 
 import Data.Char
 import Data.ByteString (ByteString)
@@ -91,15 +92,26 @@ serveNormal req respond url
   where
     htmlctype = "text/html; charset=utf-8"
     htmlpath path = "output" `mappend` B.init path `mappend` ".html"
-    serve ctype path = do
-        mtime <- getMTime path
-        case modifiedSince req mtime of
+    serve ctype path = ioMaybe (respond notFound) useMTime (getMTime path)
+      where
+        useMTime mtime = case modifiedSince req mtime of
             NotModified -> respond notModified
             Modified -> respond $ Wai.responseFile status200
                 [ (hContentType, ctype)
                 , (hLastModified, formattedMTime mtime)
                 ]
                 (B.unpack path) Nothing
+
+ioMaybe
+    :: IO b         -- what to do on error
+    -> (a -> IO b)  -- what to do on no error
+    -> IO a         -- original action
+    -> IO b
+ioMaybe onError normally action = do
+    tried <- tryIOError action
+    case tried of
+        Left _ -> onError
+        Right v -> normally v
 
 rtake :: Int -> ByteString -> ByteString
 rtake n b = B.drop (B.length b - n) b
