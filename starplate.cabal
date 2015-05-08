@@ -27,7 +27,7 @@ executable starplate
     directory,
     base >=4.8 && <4.9
   hs-source-dirs:   src/webserver
-  ghc-options: -static -optl-pthread -optl-static -Wall -O2
+  ghc-options: -static -optl-pthread -optl-static -Wall -O2 -threaded
   default-language: Haskell2010
 
 executable starplate-compiler
