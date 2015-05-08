@@ -116,15 +116,11 @@ ioMaybe onError normally action = do
 rtake :: Int -> ByteString -> ByteString
 rtake n b = B.drop (B.length b - n) b
 
-isIn :: ByteString -> ByteString -> Bool
-isIn needle haystack = (0 /=) $ B.length $ snd $
-    B.breakSubstring needle haystack
-
 isSafeURL :: ByteString -> Bool
 isSafeURL url = and
     [ B.all urlChar url
-    , not $ "//" `isIn` url
-    , not $ "../" `isIn` url
+    , not $ "//" `B.isInfixOf` url
+    , not $ "../" `B.isInfixOf` url
     , not $ ".." `B.isSuffixOf` url
     ]
 
