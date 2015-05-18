@@ -66,21 +66,11 @@ notModified = Wai.responseLBS status304 [] ""
 
 serveNormal :: Wai.Request -> IO Wai.Response
 serveNormal req
-    | "/static/css/" `B.isPrefixOf` url = case rtake 4 url of
-        ".css"  -> serve "text/css" $ B.drop 1 url
-        _       -> return notFound
-    | "/static/img/" `B.isPrefixOf` url = case rtake 4 url of
-        ".jpg"  -> serve "image/jpeg" $ B.drop 1 url
-        ".png"  -> serve "image/png" $ B.drop 1 url
-        ".svg"  -> serve "image/svg+xml" $ B.drop 1 url
-        _       -> return notFound
-    | "/static/doc/" `B.isPrefixOf` url = case rtake 4 url of
-        ".pdf"  -> serve "application/pdf" $ B.drop 1 url
-        _       -> return notFound
-    | url == "/favicon.ico" = serve "image/vnd.microsoft.icon"
-        "static/img/favicon.ico"
-    | url == "/robots.txt" = serve "text/plain"
-        "robots.txt"
+    | "/static/" `B.isPrefixOf` url = serveStatic
+    | url == "/favicon.ico" = serve
+        "image/vnd.microsoft.icon" "static/img/favicon.ico"
+    | url == "/robots.txt" = serve
+        "text/plain" "robots.txt"
     | url == "/" = serve htmlctype $ htmlpath "/index/"
     | "/" `B.isSuffixOf` url = serve htmlctype $ htmlpath url
     | otherwise = return notFound
@@ -88,6 +78,15 @@ serveNormal req
     url = Wai.rawPathInfo req
     htmlctype = "text/html; charset=utf-8"
     htmlpath path = "output" `mappend` B.init path `mappend` ".html"
+    serveStatic
+        | ".jpg"  `B.isSuffixOf` url = serveRelURL "image/jpeg"
+        | ".png"  `B.isSuffixOf` url = serveRelURL "image/png"
+        | ".svg"  `B.isSuffixOf` url = serveRelURL "image/svg+xml"
+        | ".js"   `B.isSuffixOf` url = serveRelURL "application/javascript"
+        | ".css"  `B.isSuffixOf` url = serveRelURL "text/css"
+        | ".pdf"  `B.isSuffixOf` url = serveRelURL "application/pdf"
+        | otherwise = return notFound
+    serveRelURL ctype = serve ctype (B.drop 1 url)
     serve ctype path = ioMaybe (return notFound) (return . useMTime)
         (getMTime path)
       where
