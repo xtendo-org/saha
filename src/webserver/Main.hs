@@ -19,10 +19,10 @@ import UnixSocket
 import ModifiedTime
 
 c_UNIX_PATH :: String
-c_UNIX_PATH = "/tmp/starplate.socket"
+c_UNIX_PATH = "/tmp/plate.socket"
 
 arguments :: Mode [(Char, String)]
-arguments = mode "starplate" [] "Starplate HTTP Server"
+arguments = mode "plate" [] "Plate HTTP Server"
     (flagArg (upd 'c') "CONFIGFILE")
     [ flagReq ["socket","s"]
         (upd 's') "PATH" "Unix domain socket path"
@@ -38,7 +38,7 @@ main = do
     args <- processArgs arguments
     printHelpAndQuitOr args $ do
         let sockPath = fromMaybe c_UNIX_PATH (lookup 's' args)
-        putStrLn $ "Starplate is opening at " ++ sockPath ++ " .."
+        putStrLn $ "Plate is opening at " ++ sockPath ++ " .."
         sock <- unixSocket sockPath
         if  ('d', "") `elem` args
             then Warp.runSettingsSocket
