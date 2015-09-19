@@ -1,4 +1,4 @@
-Plate is a simple web serving tool originally developed to serve the Haskell-KR(<http://haskell.kr/>) website.
+Plate is a simple web serving tool originally developed to serve the Haskell-KR (<http://haskell.kr/>) website.
 
 ## Quickstart
 
@@ -21,9 +21,9 @@ Plate is a simple web serving tool originally developed to serve the Haskell-KR(
 
 A Plate website project directory would have the following subdirectories:
 
-- data/
-- tpl/
-- static/
+- `data/`
+- `tpl/`
+- `static/`
 
 ## Documents
 
@@ -55,6 +55,8 @@ Any other header (like `title` or `author` in the example) is used for templatin
 
 The body part should be in the [CommonMark](http://commonmark.org/) syntax.
 
+`data/index.md` is treated specially. This is the "main page" of the website, served when requested with `GET /`.
+
 ## Templates
 
 Plate comes with a very simple, primitive templating. Templates are in the `tpl/` directory. `tpl/main.html` is the default template.
@@ -84,7 +86,7 @@ Files in the `static/` directory will be served directly.
 
 ## Running the server
 
-&hellip; is done in two phases:
+&hellip; is done with two steps:
 
 - `plate-compile`
 - `plate`
