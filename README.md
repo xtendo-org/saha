@@ -13,7 +13,7 @@ Plate is a simple web serving tool originally developed to serve the Haskell-KR 
 ## Project goals
 
 - Haskell. (because it was originally for a local Haskell community website)
-- Concise, meaninful, and maintainable URIs. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
+- Concise, meaningful, and maintainable URIs. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
 - Correct HTTP headers. (content charset, Last-Modified, etc.)
 - Future extensibility.
 
