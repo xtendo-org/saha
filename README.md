@@ -10,6 +10,14 @@ Plate is a simple web serving tool originally developed to serve the Haskell-KR 
 1. Run `plate-compile` to create cache by converting CommonMark to HTML and applying templates.
 1. Run `plate` to start the HTTP server.
 
+You may use the `example-website/` directory as a reference.
+
+```sh
+$ cd example-website
+$ plate-compile
+$ plate
+```
+
 ## Project goals
 
 - Haskell. (because it was originally for a local Haskell community website)
