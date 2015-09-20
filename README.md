@@ -1,16 +1,14 @@
 Plate is a simple web serving tool originally developed to serve the Haskell-KR (<http://haskell.kr/>) website.
 
+## Install
+
+```sh
+$ git clone git@github.com:kinoru/plate.git
+$ cd plate
+$ cabal install
+```
+
 ## Quickstart
-
-1. Create a directory.
-1. Have three subdirectories: `data/`, `tpl/`, and `static/`.
-1. Put [CommonMark](http://commonmark.org/) documents under `data/`.
-1. Put templates under `tpl/`.
-1. Put static files under `static/`.
-1. Run `plate-compile` to create cache by converting CommonMark to HTML and applying templates.
-1. Run `plate` to start the HTTP server.
-
-You may use the `example-website/` directory as a reference.
 
 ```sh
 $ cd example-website
@@ -24,6 +22,18 @@ $ plate
 - Concise, meaningful, and maintainable URIs. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
 - Correct HTTP headers. (content charset, Last-Modified, etc.)
 - Future extensibility.
+
+## General flow of setting up a Plate website
+
+1. Create a directory.
+1. Have three subdirectories: `data/`, `tpl/`, and `static/`.
+1. Put [CommonMark](http://commonmark.org/) documents under `data/`.
+1. Put templates under `tpl/`.
+1. Put static files under `static/`.
+1. Run `plate-compile` to create cache by converting CommonMark to HTML and applying templates.
+1. Run `plate` to start the HTTP server.
+
+Use the `example-website/` directory as a reference.
 
 ## Directory structure
 
@@ -106,3 +116,5 @@ Files in the `static/` directory will be served directly.
 ```sh
 sudo -u www-data plate -s /tmp/haskell-kr.socket
 ```
+
+Without the `-d` or `--debug` option the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) is set to 60 seconds. Caching file descriptors significantly improve the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.

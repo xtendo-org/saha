@@ -43,7 +43,8 @@ main = do
         if  ('d', "") `elem` args
             then Warp.runSettingsSocket
                 (Warp.setFdCacheDuration 0 settings) sock app
-            else Warp.runSettingsSocket settings sock app
+            else Warp.runSettingsSocket
+                (Warp.setFdCacheDuration 60 settings) sock app
   where
     settings = Warp.setPort 3000 $ Warp.defaultSettings
     printHelpAndQuitOr args action = if ('h', "") `elem` args
