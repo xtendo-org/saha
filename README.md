@@ -43,7 +43,7 @@ A Plate website project directory would have the following subdirectories:
 - `tpl/`
 - `static/`
 
-## Documents
+### Documents
 
 `data/` is where documents are. Documents have the `*.md` file extension.
 
@@ -75,7 +75,7 @@ The body part should be in the [CommonMark](http://commonmark.org/) syntax.
 
 `data/index.md` is treated specially. This is the "main page" of the website, served when requested with `GET /`.
 
-## Templates
+### Templates
 
 Plate comes with a very simple, primitive templating. Templates are in the `tpl/` directory. `tpl/main.html` is the default template.
 
@@ -98,7 +98,7 @@ An example template:
 
 Variables in the template are surrounded by backslashes, like `\title\`. Document headers are used to fill these variables. In the above example, `title: Main page` in the document will set the body of `<title>` and `<h1>` to `Main page`.
 
-## Static files
+### Static files
 
 Files in the `static/` directory will be served directly.
 
