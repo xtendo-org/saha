@@ -111,10 +111,11 @@ Files in the `static/` directory will be served directly.
 
 `plate-compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `plate` serves the contents of the `output/` and `static/`.
 
-`plate` is designed to be used with a reverse proxy, and therefore opens a Unix domain socket. The default path is `/tmp/plate.socket`, and you can change this with `-s` or `--socket` command line option. Example:
+When running `plate` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
+
+`plate` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
 
 ```sh
+plate -s 8080
 sudo -u www-data plate -s /tmp/haskell-kr.socket
 ```
-
-Without the `-d` or `--debug` option the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) is set to 60 seconds. Caching file descriptors significantly improve the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.

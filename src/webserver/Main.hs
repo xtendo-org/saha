@@ -2,8 +2,8 @@
 
 module Main where
 
-import Data.Maybe
 import System.IO.Error
+import Text.Read (readMaybe)
 
 import Data.Char
 import Data.ByteString (ByteString)
@@ -18,14 +18,19 @@ import System.Console.CmdArgs.Explicit
 import UnixSocket
 import ModifiedTime
 
-c_UNIX_PATH :: String
-c_UNIX_PATH = "/tmp/plate.socket"
+data Interface
+    = InterfacePort Warp.Port
+    | InterfaceUnixSocket FilePath
+
+instance Show Interface where
+    show (InterfacePort port) = "port " ++ show port
+    show (InterfaceUnixSocket path) = "Unix socket " ++ path
 
 arguments :: Mode [(Char, String)]
 arguments = mode "plate" [] "Plate HTTP Server"
     (flagArg (upd 'c') "CONFIGFILE")
     [ flagReq ["socket","s"]
-        (upd 's') "PATH" "Unix domain socket path"
+        (upd 's') "PORT_OR_PATH" "Port number or Unix domain socket path"
     , flagNone ["debug", "d"]
         (('d', "") :) "Run the server in the debug mode or not"
     , flagHelpSimple (('h', "") :)
@@ -37,16 +42,22 @@ main :: IO ()
 main = do
     args <- processArgs arguments
     printHelpAndQuitOr args $ do
-        let sockPath = fromMaybe c_UNIX_PATH (lookup 's' args)
-        putStrLn $ "Plate is opening at " ++ sockPath ++ " .."
-        sock <- unixSocket sockPath
-        if  ('d', "") `elem` args
-            then Warp.runSettingsSocket
-                (Warp.setFdCacheDuration 0 settings) sock app
-            else Warp.runSettingsSocket
-                (Warp.setFdCacheDuration 60 settings) sock app
+        let
+            settings = Warp.setFdCacheDuration
+                (if ('d', "") `elem` args then 0 else 60)
+                Warp.defaultSettings
+            interface = case lookup 's' args of
+                Just s -> case readMaybe s :: Maybe Warp.Port of
+                    Just p -> InterfacePort p
+                    Nothing -> InterfaceUnixSocket s
+                Nothing -> InterfacePort 3000
+        putStrLn $ "Plate is opening at " ++ (show interface) ++ ".."
+        case interface of
+            InterfacePort p -> Warp.runSettings (Warp.setPort p settings) app
+            InterfaceUnixSocket s -> do
+                sock <- unixSocket s
+                Warp.runSettingsSocket settings sock app
   where
-    settings = Warp.setPort 3000 $ Warp.defaultSettings
     printHelpAndQuitOr args action = if ('h', "") `elem` args
         then print $ helpText [] HelpFormatDefault arguments
         else action
