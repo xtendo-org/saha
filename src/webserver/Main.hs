@@ -18,49 +18,63 @@ import System.Console.CmdArgs.Explicit
 import UnixSocket
 import ModifiedTime
 
-data Interface
-    = InterfacePort Warp.Port
-    | InterfaceUnixSocket FilePath
+data Command
+    = CmdCompile
+    | CmdRun OpenAt Bool
+    | CmdHelp
 
-instance Show Interface where
-    show (InterfacePort port) = "port " ++ show port
-    show (InterfaceUnixSocket path) = "Unix socket " ++ path
+data OpenAt
+    = OpenAtPort Warp.Port
+    | OpenAtUnixSocket FilePath
 
-arguments :: Mode [(Char, String)]
-arguments = mode "plate" [] "Plate HTTP Server"
-    (flagArg (upd 'c') "CONFIGFILE")
-    [ flagReq ["socket","s"]
-        (upd 's') "PORT_OR_PATH" "Port number or Unix domain socket path"
+parseOpenAt :: String -> OpenAt
+parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
+    Just p  -> OpenAtPort p
+    Nothing -> OpenAtUnixSocket s
+
+instance Show OpenAt where
+    show (OpenAtPort port) = "port " ++ show port
+    show (OpenAtUnixSocket path) = "Unix socket " ++ path
+
+arguments :: Mode Command
+arguments = modes "plate" CmdHelp "Plate website serving tool"
+    [compileCmd, runCmd]
+
+compileCmd :: Mode Command
+compileCmd = mode "compile" CmdHelp "apply templating and prepare serving"
+    (flagArg (\ _ _ -> Right CmdCompile) "") []
+
+runCmd :: Mode Command
+runCmd = mode "run" CmdHelp "launch HTTP server"
+    (flagArg (\ _ _ -> Right $ CmdRun (OpenAtPort 3000) False) "")
+    [ flagReq ["socket", "s"]
+        socketUpd "PORT_OR_PATH" "Port number or Unix domain socket path"
     , flagNone ["debug", "d"]
-        (('d', "") :) "Run the server in the debug mode or not"
-    , flagHelpSimple (('h', "") :)
+        debugUpd "Run the server in the debug mode or not"
     ]
   where
-    upd msg x v = Right $ (msg, x) : v
+    socketUpd s (CmdRun _ d) = Right $ CmdRun (parseOpenAt s) d
+    socketUpd _ x = Right x
+    debugUpd (CmdRun s _) = CmdRun s True
+    debugUpd x = x
 
 main :: IO ()
 main = do
     args <- processArgs arguments
-    printHelpAndQuitOr args $ do
-        let
-            settings = Warp.setFdCacheDuration
-                (if ('d', "") `elem` args then 0 else 60)
-                Warp.defaultSettings
-            interface = case lookup 's' args of
-                Just s -> case readMaybe s :: Maybe Warp.Port of
-                    Just p -> InterfacePort p
-                    Nothing -> InterfaceUnixSocket s
-                Nothing -> InterfacePort 3000
-        putStrLn $ "Plate is opening at " ++ (show interface) ++ ".."
-        case interface of
-            InterfacePort p -> Warp.runSettings (Warp.setPort p settings) app
-            InterfaceUnixSocket s -> do
-                sock <- unixSocket s
-                Warp.runSettingsSocket settings sock app
+    case args of
+        CmdHelp -> print $ helpText [] HelpFormatDefault arguments
+        CmdCompile -> undefined
+        CmdRun openAt debug -> run openAt debug
+
+run :: OpenAt -> Bool -> IO ()
+run openAt debug = case openAt of
+    OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) app
+    OpenAtUnixSocket s -> do
+        sock <- unixSocket s
+        Warp.runSettingsSocket settings sock app
   where
-    printHelpAndQuitOr args action = if ('h', "") `elem` args
-        then print $ helpText [] HelpFormatDefault arguments
-        else action
+    settings = Warp.setFdCacheDuration (if debug then 0 else 60)
+        Warp.defaultSettings
 
 app :: Wai.Application
 app req respond = do
