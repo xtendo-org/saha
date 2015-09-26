@@ -12,8 +12,8 @@ $ cabal install
 
 ```sh
 $ cd example-website
-$ plate-compile
-$ plate
+$ plate compile
+$ plate run
 ```
 
 ## Project goals
@@ -30,8 +30,8 @@ $ plate
 1. Put [CommonMark](http://commonmark.org/) documents under `data/`.
 1. Put templates under `tpl/`.
 1. Put static files under `static/`.
-1. Run `plate-compile` to create cache by converting CommonMark to HTML and applying templates.
-1. Run `plate` to start the HTTP server.
+1. Run `plate compile` to create cache by converting CommonMark to HTML and applying templates.
+1. Run `plate run` to start the HTTP server.
 
 Use the `example-website/` directory as a reference.
 
@@ -106,16 +106,17 @@ Files in the `static/` directory will be served directly.
 
 &hellip; is done with two steps:
 
-- `plate-compile`
-- `plate`
+- `plate compile`
+- `plate run`
 
-`plate-compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `plate` serves the contents of the `output/` and `static/`.
+`plate compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `plate run` serves the contents of the `output/` and `static/`.
 
-When running `plate` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
+When running `plate run` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
 
-`plate` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
+`plate run` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
 
 ```sh
-plate -s 8080
+plate run
+plate run -s 8080
 sudo -u www-data plate -s /tmp/haskell-kr.socket
 ```
