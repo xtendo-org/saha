@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Run
+    ( run
+    ) where
 
 import System.IO.Error
-import Text.Read (readMaybe)
 
 import Data.Char
 import Data.ByteString (ByteString)
@@ -13,65 +14,18 @@ import Network.HTTP.Types
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
 
-import System.Console.CmdArgs.Explicit
-
-import UnixSocket
-import ModifiedTime
-
-data Command
-    = CmdCompile
-    | CmdRun OpenAt Bool
-    | CmdHelp
-
-data OpenAt
-    = OpenAtPort Warp.Port
-    | OpenAtUnixSocket FilePath
-
-parseOpenAt :: String -> OpenAt
-parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
-    Just p  -> OpenAtPort p
-    Nothing -> OpenAtUnixSocket s
-
-instance Show OpenAt where
-    show (OpenAtPort port) = "port " ++ show port
-    show (OpenAtUnixSocket path) = "Unix socket " ++ path
-
-arguments :: Mode Command
-arguments = modes "plate" CmdHelp "Plate website serving tool"
-    [compileCmd, runCmd]
-
-compileCmd :: Mode Command
-compileCmd = mode "compile" CmdHelp "apply templating and prepare serving"
-    (flagArg (\ _ _ -> Right CmdCompile) "") []
-
-runCmd :: Mode Command
-runCmd = mode "run" CmdHelp "launch HTTP server"
-    (flagArg (\ _ _ -> Right $ CmdRun (OpenAtPort 3000) False) "")
-    [ flagReq ["socket", "s"]
-        socketUpd "PORT_OR_PATH" "Port number or Unix domain socket path"
-    , flagNone ["debug", "d"]
-        debugUpd "Run the server in the debug mode or not"
-    ]
-  where
-    socketUpd s (CmdRun _ d) = Right $ CmdRun (parseOpenAt s) d
-    socketUpd _ x = Right x
-    debugUpd (CmdRun s _) = CmdRun s True
-    debugUpd x = x
-
-main :: IO ()
-main = do
-    args <- processArgs arguments
-    case args of
-        CmdHelp -> print $ helpText [] HelpFormatDefault arguments
-        CmdCompile -> undefined
-        CmdRun openAt debug -> run openAt debug
+import Types
+import Run.UnixSocket
+import Run.ModifiedTime
 
 run :: OpenAt -> Bool -> IO ()
-run openAt debug = case openAt of
-    OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) app
-    OpenAtUnixSocket s -> do
-        sock <- unixSocket s
-        Warp.runSettingsSocket settings sock app
+run openAt debug = do
+    B.putStrLn $ mconcat ["Plate is opening at ", B.pack (show openAt), ".."]
+    case openAt of
+        OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) app
+        OpenAtUnixSocket s -> do
+            sock <- unixSocket s
+            Warp.runSettingsSocket settings sock app
   where
     settings = Warp.setFdCacheDuration (if debug then 0 else 60)
         Warp.defaultSettings
@@ -134,9 +88,6 @@ ioMaybe onError normally action = do
     case tried of
         Left _ -> onError
         Right v -> normally v
-
-rtake :: Int -> ByteString -> ByteString
-rtake n b = B.drop (B.length b - n) b
 
 isSafeURL :: ByteString -> Bool
 isSafeURL url = and

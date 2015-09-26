@@ -1,4 +1,4 @@
-module UnixSocket
+module Run.UnixSocket
     ( Socket
     , unixSocket
     ) where

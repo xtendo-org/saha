@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser
+module Compile.Parser
     ( source
     , template
     , Template(..)

@@ -25,23 +25,12 @@ executable plate
     network,
     time,
     directory,
-    base >=4.8 && <4.9
-  hs-source-dirs:   src/webserver
-  ghc-options: -static -optl-pthread -optl-static -Wall -O2 -threaded
-  default-language: Haskell2010
-
-executable plate-compile
-  main-is:          Main.hs
-  -- other-modules:
-  -- other-extensions:
-  build-depends:
-    directory,
     filepath,
     unix,
     attoparsec,
     text,
     cmark == 0.3.*,
     base >=4.8 && <4.9
-  hs-source-dirs:   src/mdcompiler
-  ghc-options: -Wall -O2
+  hs-source-dirs:   src
+  ghc-options: -static -optl-pthread -optl-static -Wall -O2 -threaded
   default-language: Haskell2010
