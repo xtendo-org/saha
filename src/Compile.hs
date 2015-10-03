@@ -12,10 +12,9 @@ import System.Posix.Types (EpochTime)
 import System.Posix.Files
 import Data.List (isSuffixOf)
 
-import Prelude hiding (readFile)
+import Prelude hiding (readFile, writeFile)
 import Data.Text (Text, unpack)
-import Data.Text.IO (readFile, hPutStr)
-import System.IO (withFile, IOMode(..))
+import Data.Text.IO (readFile, writeFile)
 import System.IO.Error
 
 import CMark
@@ -78,14 +77,14 @@ writeOut
     -> IO ()
 writeOut mtime path tpl headers content = do
     putStrLn path
-    withFile path WriteMode $ \ ohdl ->
-        forM_ tpl $ \ seg -> hPutStr ohdl $ case seg of
-            TextSegment t -> t
-            Variable var -> if var == "content"
-                then commonmarkToHtml [optSmart] content
-                else maybe (noSuchHeader var) id (lookup var headers)
+    writeFile path $ mconcat $ map segConvert tpl
     setFileTimes path mtime mtime
   where
+    segConvert seg = case seg of
+        TextSegment t -> t
+        Variable var -> if var == "content"
+            then commonmarkToHtml [optSmart] content
+            else maybe (noSuchHeader var) id (lookup var headers)
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 
 getRecursiveContents :: FilePath -> IO [FilePath]
