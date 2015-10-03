@@ -32,5 +32,5 @@ executable plate
     cmark == 0.3.*,
     base >=4.8 && <4.9
   hs-source-dirs:   src
-  ghc-options: -static -optl-pthread -optl-static -Wall -O2 -threaded
+  ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded
   default-language: Haskell2010

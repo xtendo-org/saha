@@ -1,4 +1,4 @@
-Plate is a simple web serving tool originally developed to serve the Haskell-KR (<http://haskell.kr/>) website.
+Plate is a simple web serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website.
 
 ## Install
 
