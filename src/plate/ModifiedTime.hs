@@ -1,4 +1,4 @@
-module Run.ModifiedTime
+module ModifiedTime
     ( Modified(..)
     , EpochTime
     , getMTime

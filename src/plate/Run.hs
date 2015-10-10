@@ -15,8 +15,8 @@ import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
 
 import Types
-import Run.UnixSocket
-import Run.ModifiedTime
+import UnixSocket
+import ModifiedTime
 
 run :: OpenAt -> Bool -> IO ()
 run openAt debug = do
