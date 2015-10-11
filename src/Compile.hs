@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Compile where
 
 import Control.Monad
 import System.Directory
@@ -28,8 +28,8 @@ stDSTDIR = "output"
 stTPL_PATH :: FilePath
 stTPL_PATH = "tpl/"
 
-main :: IO ()
-main = do
+compile :: IO ()
+compile = do
     (mainTpl, mainTplMTime) <- getTemplate (stTPL_PATH ++ "main.html")
     files <- getRecursiveContents stSRCDIR
     forM_ files $ \ path -> if not (isMd path) then return () else do

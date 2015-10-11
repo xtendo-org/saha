@@ -1,4 +1,4 @@
-module UnixSocket
+module Server.UnixSocket
     ( Socket
     , unixSocket
     ) where

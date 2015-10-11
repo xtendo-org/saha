@@ -4,8 +4,7 @@ module Main where
 
 import System.Console.CmdArgs.Explicit
 
-import Types
-import Run
+import Server.Run
 
 data Command
     = CmdRun OpenAt Bool

@@ -1,30 +1,44 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Run
+module Server.Run
     ( run
+    , OpenAt(..)
+    , parseOpenAt
     ) where
 
 import Prelude hiding ((++))
-
-import System.IO.Error
 
 import Data.Char
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.ByteString.Lazy as LB (fromStrict)
 
+import System.IO.Error
+import Text.Read (readMaybe)
 import System.Posix.Files.ByteString (fileExist)
 
 import Network.HTTP.Types
 import qualified Network.Wai as Wai
 import qualified Network.Wai.Handler.Warp as Warp
 
-import Types
-import UnixSocket
-import ModifiedTime
+import Server.UnixSocket
+import Server.ModifiedTime
 
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
+
+data OpenAt
+    = OpenAtPort Warp.Port
+    | OpenAtUnixSocket FilePath
+
+parseOpenAt :: String -> OpenAt
+parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
+    Just p  -> OpenAtPort p
+    Nothing -> OpenAtUnixSocket s
+
+instance Show OpenAt where
+    show (OpenAtPort port) = "port " ++ show port
+    show (OpenAtUnixSocket path) = "Unix socket " ++ path
 
 run :: OpenAt -> Bool -> IO ()
 run openAt debug = do

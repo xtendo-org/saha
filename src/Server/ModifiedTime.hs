@@ -1,4 +1,4 @@
-module ModifiedTime
+module Server.ModifiedTime
     ( Modified(..)
     , EpochTime
     , getMTime
