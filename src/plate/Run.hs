@@ -4,11 +4,16 @@ module Run
     ( run
     ) where
 
+import Prelude hiding ((++))
+
 import System.IO.Error
 
 import Data.Char
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
+import Data.ByteString.Lazy as LB (fromStrict)
+
+import System.Posix.Files.ByteString (fileExist)
 
 import Network.HTTP.Types
 import qualified Network.Wai as Wai
@@ -17,6 +22,9 @@ import qualified Network.Wai.Handler.Warp as Warp
 import Types
 import UnixSocket
 import ModifiedTime
+
+(++) :: Monoid m => m -> m -> m
+(++) = mappend
 
 run :: OpenAt -> Bool -> IO ()
 run openAt debug = do
@@ -44,6 +52,14 @@ notFound = Wai.responseLBS status404
 notModified :: Wai.Response
 notModified = Wai.responseLBS status304 [] ""
 
+redirectPermanent :: ByteString -> Wai.Response
+redirectPermanent path = Wai.responseLBS status301
+    [ ("Content-Type", "text/html")
+    , ("Location", path)
+    ] $ mconcat ["Redirect to: <a href=\"", lpath, "\">", lpath, "</a>"]
+  where
+    lpath = fromStrict path
+
 serveNormal :: Wai.Request -> IO Wai.Response
 serveNormal req
     | "/static/" `B.isPrefixOf` url = serveStatic
@@ -51,13 +67,14 @@ serveNormal req
         "image/vnd.microsoft.icon" "static/img/favicon.ico"
     | url == "/robots.txt" = serve
         "text/plain" "robots.txt"
-    | url == "/" = serve htmlctype $ htmlpath "/index/"
-    | "/" `B.isSuffixOf` url = serve htmlctype $ htmlpath url
-    | otherwise = return notFound
+    | B.last url == '/' = serve htmlctype htmlpath
+    | otherwise = checkRedirect
   where
     url = Wai.rawPathInfo req
     htmlctype = "text/html; charset=utf-8"
-    htmlpath path = "output" `mappend` B.init path `mappend` ".html"
+    htmlpath = if B.length url == 1
+        then "output/index.html"
+        else mconcat ["output", B.init url, ".html"]
     serveStatic
         | ".jpg"  `B.isSuffixOf` url = serveRelURL "image/jpeg"
         | ".png"  `B.isSuffixOf` url = serveRelURL "image/png"
@@ -77,6 +94,12 @@ serveNormal req
                 , (hLastModified, formattedMTime mtime)
                 ]
                 (B.unpack path) Nothing
+    checkRedirect = do
+        exist <- fileExist (mconcat ["output", url, ".html"])
+        return $ if exist
+            then redirectPermanent (mconcat [host, url, "/"])
+            else notFound
+    host = maybe "" ("//" ++) $ Wai.requestHeaderHost req
 
 ioMaybe
     :: IO b         -- what to do on error
