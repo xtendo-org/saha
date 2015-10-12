@@ -4,9 +4,9 @@ Here's some demonstration of Markdown.
 
 ## Markdown syntax
 
-Plate takes [CommonMark](http://commonmark.org/) documents as input. Therefore
+Saha takes [CommonMark](http://commonmark.org/) documents as input. Therefore
 
-- A Plate
+- A Saha
 - document
 
 is easy to

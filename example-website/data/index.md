@@ -1,6 +1,6 @@
 title: Main page
 
-Welcome to the example website of Plate! As you must have expected, there's really nothing here.
+Welcome to the example website of Saha! As you must have expected, there's really nothing here.
 
 ## Meaningless section
 

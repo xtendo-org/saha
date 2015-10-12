@@ -42,7 +42,7 @@ instance Show OpenAt where
 
 run :: OpenAt -> Bool -> IO ()
 run openAt debug = do
-    B.putStrLn $ mconcat ["Plate is opening at ", B.pack (show openAt), ".."]
+    B.putStrLn $ mconcat ["Saha is opening at ", B.pack (show openAt), ".."]
     case openAt of
         OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) app
         OpenAtUnixSocket s -> do

@@ -1,4 +1,4 @@
-name:               plate
+name:               saha
 version:            0.0.1
 synopsis:           A simple web server
 license:            AGPL-3
@@ -10,7 +10,7 @@ build-type:         Simple
 -- extra-source-files:
 cabal-version:      >=1.18
 
-executable plate
+executable saha
   main-is:          Main.hs
   build-depends:
     attoparsec == 0.13.*,
@@ -33,7 +33,7 @@ executable plate
   ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded
   default-language: Haskell2010
 
-executable plate-server
+executable saha-server
   main-is:          Server.hs
   hs-source-dirs:   src
   ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded

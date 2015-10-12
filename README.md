@@ -1,10 +1,10 @@
-Plate is a simple web serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website.
+Saha is a simple web serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website. Questions, bug reports, and opinions are welcome.
 
 ## Install
 
 ```sh
-$ git clone git@github.com:kinoru/plate.git
-$ cd plate
+$ git clone git@github.com:kinoru/saha.git
+$ cd saha
 $ cabal install
 ```
 
@@ -12,8 +12,8 @@ $ cabal install
 
 ```sh
 $ cd example-website
-$ plate compile
-$ plate run
+$ saha compile
+$ saha server
 ```
 
 ## Project goals
@@ -23,21 +23,21 @@ $ plate run
 - Correct HTTP headers. (content charset, Last-Modified, etc.)
 - Future extensibility.
 
-## General flow of setting up a Plate website
+## General flow of setting up a Saha website
 
 1. Create a directory.
 1. Have three subdirectories: `data/`, `tpl/`, and `static/`.
 1. Put [CommonMark](http://commonmark.org/) documents under `data/`.
 1. Put templates under `tpl/`.
 1. Put static files under `static/`.
-1. Run `plate compile` to create cache by converting CommonMark to HTML and applying templates.
-1. Run `plate run` to start the HTTP server.
+1. Run `saha compile` to create cache by converting CommonMark to HTML and applying templates.
+1. Run `saha server` to start the HTTP server.
 
 Use the `example-website/` directory as a reference.
 
 ## Directory structure
 
-A Plate website project directory would have the following subdirectories:
+A Saha website project directory would have the following subdirectories:
 
 - `data/`
 - `tpl/`
@@ -47,7 +47,7 @@ A Plate website project directory would have the following subdirectories:
 
 `data/` is where documents are. Documents have the `*.md` file extension.
 
-Below is a typical Plate document.
+Below is a typical Saha document.
 
     title: Main page
     author: Kinoru
@@ -77,7 +77,7 @@ The body part should be in the [CommonMark](http://commonmark.org/) syntax.
 
 ### Templates
 
-Plate comes with a very simple, primitive templating. Templates are in the `tpl/` directory. `tpl/main.html` is the default template.
+Saha comes with a very simple, primitive templating. Templates are in the `tpl/` directory. `tpl/main.html` is the default template.
 
 An example template:
 
@@ -106,17 +106,19 @@ Files in the `static/` directory will be served directly.
 
 &hellip; is done with two steps:
 
-- `plate compile`
-- `plate run`
+- `saha compile`
+- `saha server`
 
-`plate compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `plate run` serves the contents of the `output/` and `static/`.
+`saha compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `saha server` serves the contents of the `output/` and `static/`.
 
-When running `plate run` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
+When running `saha server` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
 
-`plate run` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
+`saha server` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
 
 ```sh
-plate run
-plate run -s 8080
-sudo -u www-data plate -s /tmp/haskell-kr.socket
+saha server
+saha server -s 8080
+sudo -u www-data saha server -s /tmp/haskell-kr.socket
 ```
+
+There is a separate executable `saha-server`. It is (supposed to be) smaller than the full `saha` binary and has less overhead. You are recommended to use this for server deployment.
