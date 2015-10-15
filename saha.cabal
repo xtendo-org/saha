@@ -30,13 +30,13 @@ executable saha
     unix,
     base >=4.8 && <4.9
   hs-source-dirs:   src
-  ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded
+  ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded -rtsopts
   default-language: Haskell2010
 
 executable saha-server
   main-is:          Server.hs
   hs-source-dirs:   src
-  ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded
+  ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded -rtsopts
   default-language: Haskell2010
   build-depends:
     bytestring == 0.10.*,
