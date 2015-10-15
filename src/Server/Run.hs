@@ -68,8 +68,8 @@ notModified = Wai.responseLBS status304 [] ""
 
 redirectPermanent :: ByteString -> Wai.Response
 redirectPermanent path = Wai.responseLBS status301
-    [ ("Content-Type", "text/html")
-    , ("Location", path)
+    [ (hContentType, "text/html")
+    , (hLocation, path)
     ] $ mconcat ["Redirect to: <a href=\"", lpath, "\">", lpath, "</a>"]
   where
     lpath = fromStrict path
