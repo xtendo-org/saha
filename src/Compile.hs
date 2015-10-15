@@ -3,9 +3,8 @@
 module Compile where
 
 import Control.Monad
-import System.Directory
-    (getDirectoryContents, doesDirectoryExist, createDirectoryIfMissing)
-import System.FilePath (dropExtension, splitFileName, (</>))
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath (dropExtension, splitFileName)
 import System.Posix.Types (EpochTime)
 import System.Posix.Files
 import Data.List (isSuffixOf)
@@ -18,6 +17,7 @@ import System.IO.Error
 import CMark
 
 import Parser
+import RecursiveContents
 
 stSRCDIR :: FilePath
 stSRCDIR = "data"
@@ -84,18 +84,6 @@ writeOut mtime path tpl headers content = do
             then commonmarkToHtml [optSmart] content
             else maybe (noSuchHeader var) id (lookup var headers)
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
-
-getRecursiveContents :: FilePath -> IO [FilePath]
-getRecursiveContents topdir = do
-    names <- getDirectoryContents topdir
-    let properNames = filter (`notElem` [".", ".."]) names
-    paths <- forM properNames $ \name -> do
-        let path = topdir </> name
-        isDir <- doesDirectoryExist path
-        if isDir
-            then getRecursiveContents path
-            else return [path]
-    return (concat paths)
 
 getMTime :: FilePath -> IO EpochTime
 getMTime = fmap modificationTime . getFileStatus
