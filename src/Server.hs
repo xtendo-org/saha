@@ -17,7 +17,7 @@ arguments = mode "run" (CmdRun (OpenAtPort 3000) False) "launch HTTP server"
         socketUpd "PORT_OR_PATH" "Port number or Unix domain socket path"
     , flagNone ["debug", "d"]
         debugUpd "Run the server in the debug mode or not"
-    , flagHelpSimple (\ _ -> CmdHelp)
+    , flagHelpSimple (const CmdHelp)
     ]
   where
     socketUpd s (CmdRun _ d) = Right $ CmdRun (parseOpenAt s) d

@@ -2,6 +2,7 @@
 
 module Compile where
 
+import Data.Maybe
 import Control.Monad
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (dropExtension, splitFileName)
@@ -25,14 +26,14 @@ stSRCDIR = "data"
 stDSTDIR :: FilePath
 stDSTDIR = "output"
 
-stTPL_PATH :: FilePath
-stTPL_PATH = "tpl/"
+stTplPath :: FilePath
+stTplPath = "tpl/"
 
 compile :: IO ()
 compile = do
-    (mainTpl, mainTplMTime) <- getTemplate (stTPL_PATH ++ "main.html")
+    (mainTpl, mainTplMTime) <- getTemplate (stTplPath ++ "main.html")
     files <- getRecursiveContents stSRCDIR
-    forM_ files $ \ path -> if not (isMd path) then return () else do
+    forM_ files $ \ path -> when (isMd path) $ do
         let
             commonPath = dropExtension $ drop (length stSRCDIR) path
             dir = fst $ splitFileName commonPath
@@ -43,9 +44,9 @@ compile = do
             print path
             error "source file header parsing failed"
         checkPublicity headers $ do
-            (tpl, tplMTime) <- case (lookup "template" headers) of
+            (tpl, tplMTime) <- case lookup "template" headers of
                 Nothing -> return (mainTpl, mainTplMTime)
-                Just v -> getTemplate (stTPL_PATH ++ unpack v)
+                Just v -> getTemplate (stTplPath ++ unpack v)
             let
                 maxMTime = max mtime tplMTime
                 doTheCopy = do
@@ -55,17 +56,17 @@ compile = do
             targetMTime <- tryIOError $ getMTime targetPath
             case targetMTime of
                 Left _ -> doTheCopy
-                Right t ->  if t < maxMTime then doTheCopy else return ()
+                Right t ->  when (t < maxMTime) doTheCopy
   where
     checkPublicity headers action = case lookup "publicity" headers of
         Nothing -> action
-        Just v -> if v == "hidden" then return () else action
+        Just v -> unless (v == "hidden") action
     isMd path = (".md" :: FilePath) `isSuffixOf` path
     maybeAct m a = maybe a return m
 
 getTemplate :: FilePath -> IO ([Template], EpochTime)
 getTemplate path = do
-    tpl <- fmap template $ readFile path
+    tpl <- template <$> readFile path
     mtime <- getMTime path
     return (tpl, mtime)
 
@@ -82,7 +83,7 @@ writeOut mtime path tpl headers content = do
         TextSegment t -> t
         Variable var -> if var == "content"
             then commonmarkToHtml [optSmart] content
-            else maybe (noSuchHeader var) id (lookup var headers)
+            else fromMaybe (noSuchHeader var) $ lookup var headers
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 
 getMTime :: FilePath -> IO EpochTime

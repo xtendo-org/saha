@@ -27,6 +27,8 @@ import Server.ModifiedTime
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
 
+-- OpenAt configuration
+
 data OpenAt
     = OpenAtPort Warp.Port
     | OpenAtUnixSocket FilePath
@@ -39,6 +41,8 @@ parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
 instance Show OpenAt where
     show (OpenAtPort port) = "port " ++ show port
     show (OpenAtUnixSocket path) = "Unix socket " ++ path
+
+-- logic
 
 run :: OpenAt -> Bool -> IO ()
 run openAt debug = do
@@ -53,26 +57,10 @@ run openAt debug = do
         Warp.defaultSettings
 
 app :: Wai.Application
-app req respond = do
+app req respond =
     if isSafeURL $ Wai.rawPathInfo req
-        then serveNormal req >>= respond
-        else respond notFound
-
-notFound :: Wai.Response
-notFound = Wai.responseLBS status404
-    [(hContentType, "text/plain")]
-    "Page not found"
-
-notModified :: Wai.Response
-notModified = Wai.responseLBS status304 [] ""
-
-redirectPermanent :: ByteString -> Wai.Response
-redirectPermanent path = Wai.responseLBS status301
-    [ (hContentType, "text/html")
-    , (hLocation, path)
-    ] $ mconcat ["Redirect to: <a href=\"", lpath, "\">", lpath, "</a>"]
-  where
-    lpath = fromStrict path
+    then serveNormal req >>= respond
+    else respond notFound
 
 serveNormal :: Wai.Request -> IO Wai.Response
 serveNormal req
@@ -114,6 +102,26 @@ serveNormal req
             then redirectPermanent (mconcat [host, url, "/"])
             else notFound
     host = maybe "" ("//" ++) $ Wai.requestHeaderHost req
+
+-- HTTP responses
+
+notFound :: Wai.Response
+notFound = Wai.responseLBS status404
+    [(hContentType, "text/plain")]
+    "Page not found"
+
+notModified :: Wai.Response
+notModified = Wai.responseLBS status304 [] ""
+
+redirectPermanent :: ByteString -> Wai.Response
+redirectPermanent path = Wai.responseLBS status301
+    [ (hContentType, "text/html")
+    , (hLocation, path)
+    ] $ mconcat ["Redirect to: <a href=\"", lpath, "\">", lpath, "</a>"]
+  where
+    lpath = fromStrict path
+
+-- utilities
 
 ioMaybe
     :: IO b         -- what to do on error

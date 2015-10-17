@@ -47,4 +47,4 @@ segments = manyTill (varSeg <|> textSeg) endOfInput
         var <- takeTill ('\\' ==)
         _ <- anyChar
         return $ Variable var
-    textSeg = fmap TextSegment $ takeTill ('\\' ==)
+    textSeg = TextSegment <$> takeTill ('\\' ==)
