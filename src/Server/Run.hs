@@ -82,7 +82,7 @@ serveNormal req
     | url == "/robots.txt" = serve
         "text/plain" "robots.txt"
     | B.last url == '/' = serve htmlctype htmlpath
-    | otherwise = checkRedirect
+    | otherwise = return notFound
   where
     url = Wai.rawPathInfo req
     htmlctype = "text/html; charset=utf-8"
