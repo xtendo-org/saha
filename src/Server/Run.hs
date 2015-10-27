@@ -44,39 +44,40 @@ instance Show OpenAt where
 
 -- logic
 
-run :: OpenAt -> Bool -> IO ()
-run openAt debug = do
+run :: OpenAt -> Bool -> ByteString -> IO ()
+run openAt debug absoluteHost = do
     B.putStrLn $ mconcat ["Saha is opening at ", B.pack (show openAt), ".."]
     case openAt of
-        OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) app
+        OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) appWithHost
         OpenAtUnixSocket s -> do
             sock <- unixSocket s
-            Warp.runSettingsSocket settings sock app
+            Warp.runSettingsSocket settings sock appWithHost
   where
+    appWithHost = app absoluteHost
     settings = Warp.setFdCacheDuration (if debug then 0 else 60)
         Warp.defaultSettings
 
-app :: Wai.Application
-app req respond =
+app :: ByteString -> Wai.Application
+app absoluteHost req respond =
     if isSafeURL $ Wai.rawPathInfo req
-    then serveNormal req >>= respond
+    then serveNormal absoluteHost req >>= respond
     else respond notFound
 
-serveNormal :: Wai.Request -> IO Wai.Response
-serveNormal req
+serveNormal :: ByteString -> Wai.Request -> IO Wai.Response
+serveNormal host req
     | "/static/" `B.isPrefixOf` url = serveStatic
     | url == "/favicon.ico" = serve
         "image/vnd.microsoft.icon" "static/img/favicon.ico"
     | url == "/robots.txt" = serve
         "text/plain" "robots.txt"
-    | B.last url == '/' = serve htmlctype htmlpath
-    | otherwise = return notFound
+    | B.length url /= 1 && B.last url == '/' = checkRedirect
+    | otherwise = serve htmlctype htmlpath
   where
     url = Wai.rawPathInfo req
     htmlctype = "text/html; charset=utf-8"
     htmlpath = if B.length url == 1
         then "output/index.html"
-        else mconcat ["output", B.init url, ".html"]
+        else mconcat ["output", url, ".html"]
     serveStatic
         | ".jpg"  `B.isSuffixOf` url = serveRelURL "image/jpeg"
         | ".png"  `B.isSuffixOf` url = serveRelURL "image/png"
@@ -97,11 +98,10 @@ serveNormal req
                 ]
                 (B.unpack path) Nothing
     checkRedirect = do
-        exist <- fileExist (mconcat ["output", url, ".html"])
+        exist <- fileExist (mconcat ["output", B.init url, ".html"])
         return $ if exist
-            then redirectPermanent (mconcat [host, url, "/"])
+            then redirectPermanent (mconcat [host, B.init url])
             else notFound
-    host = maybe "" ("//" ++) $ Wai.requestHeaderHost req
 
 -- HTTP responses
 
@@ -117,7 +117,11 @@ redirectPermanent :: ByteString -> Wai.Response
 redirectPermanent path = Wai.responseLBS status301
     [ (hContentType, "text/html")
     , (hLocation, path)
-    ] $ mconcat ["Redirect to: <a href=\"", lpath, "\">", lpath, "</a>"]
+    ] $ mconcat
+        [ "<html><head><title>Moved</title></head><body>"
+        , "Redirect to: <a href=\"" , lpath , "\">" , lpath
+        , "</a></body></html>"
+        ]
   where
     lpath = fromStrict path
 
