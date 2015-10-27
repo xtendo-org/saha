@@ -13,7 +13,7 @@ $ cabal install
 ```sh
 $ cd example-website
 $ saha compile
-$ saha server
+$ saha server -h http://example.com
 ```
 
 ## Project goals
@@ -111,14 +111,30 @@ Files in the `static/` directory will be served directly.
 
 `saha compile` reads the source documents, converts CommonMark to HTML, applies the templating to create the cache, and put them under the `output/` directory. `saha server` serves the contents of the `output/` and `static/`.
 
+There is a separate executable `saha-server`. It is (supposed to be) smaller than the full `saha` binary and has less overhead. You are recommended to use this for server deployment.
+
+### Server options
+
+#### `-d` or `--debug`
+
 When running `saha server` without the `-d` or `--debug` option, the [file descriptor cache duration](http://www.yesodweb.com/blog/2012/09/caching-fd) will be set to 60 seconds. Caching file descriptors significantly improves the performance, but it may cause misbehavior if you rapidly change site contents and do the refresh from the browser. Make sure you set `-d` during development.
+
+#### `-s` or `--socket`
 
 `saha server` opens the port 3000 by default. You may override this with `-s` or `--socket` option. Example:
 
 ```sh
-saha server
-saha server -s 8080
-sudo -u www-data saha server -s /tmp/haskell-kr.socket
+saha server -h http://example.com
+saha server -h http://example.com -s 8080
+sudo -u www-data saha server -h http://example.com -s /tmp/haskell-kr.socket
 ```
 
-There is a separate executable `saha-server`. It is (supposed to be) smaller than the full `saha` binary and has less overhead. You are recommended to use this for server deployment.
+#### `-h` or `--host`
+
+The `-h` option determines the host name that Saha will use to generate the redirection URIs. Saha automatically redirects all requests with the trailing slash to a slash-less URI, because [it's considered a better practice](https://googlewebmastercentral.blogspot.com/2010/04/to-slash-or-not-to-slash.html). However [RFC 2616](https://tools.ietf.org/html/rfc2616#section-10.3.2) states that the new location given by HTTP 301 must be an absolute URI and there is no way Saha can figure it out without knowing the absolute host name. For local development testing, omitting `-h` should cause no problem because most web browsers generously handle relative redirects too, but when deploying you are encouraged to give this command line option to make sure the website correctly behaves.
+
+Example:
+
+```sh
+saha server -h http://example.com
+```
