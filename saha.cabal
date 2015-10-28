@@ -11,6 +11,7 @@ build-type:         Simple
 cabal-version:      >=1.18
 
 executable saha
+  extensions:       OverloadedStrings
   main-is:          Main.hs
   build-depends:
     attoparsec == 0.13.*,
@@ -34,6 +35,7 @@ executable saha
   default-language: Haskell2010
 
 executable saha-server
+  extensions:       OverloadedStrings
   main-is:          Server.hs
   hs-source-dirs:   src
   ghc-options: -static -optl-pthread -optl-static -optl-s -Wall -O2 -threaded -rtsopts
