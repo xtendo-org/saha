@@ -1,19 +1,42 @@
-Saha is a simple web serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website. Questions, bug reports, and opinions are welcome.
+Saha is a static website generation and serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website. Questions, bug reports, and opinions are welcome.
 
 ## Install
 
+Installation is easy!
+
+### x64 Linux
+
+Zero dependency install (except `curl`) with only two megabytes of disk consumption:
+
 ```sh
-$ git clone git@github.com:kinoru/saha.git
-$ cd saha
-$ cabal install
+curl -L https://github.com/kinoru/saha/releases/latest \
+| grep "/saha/releases/download/" | head -n 1 \
+| sed -e "s/.*<a href=\"\(.*\)\" rel.*/https:\/\/github.com\1/g" \
+| xargs curl -L > ~/.local/bin/saha \
+&& chmod +x ~/.local/bin/saha
 ```
+
+We assume that `~/.local/bin` is in your `$PATH`. The above also works as an update command as well.
+
+### Other platforms
+
+[Stack](https://github.com/commercialhaskell/stack) is the recommended build tool for Saha.
+
+```sh
+$ git clone https://github.com/kinoru/saha.git
+$ cd saha
+$ stack install
+```
+
+The plain old cabal-install should work as well. If it doesn't, please create a new issue and report to us.
 
 ## Quickstart
 
 ```sh
-$ cd example-website
+$ git clone https://github.com/kinoru/saha.git
+$ cd saha/example-website
 $ saha compile
-$ saha server -h http://example.com
+$ saha server
 ```
 
 ## Project goals
