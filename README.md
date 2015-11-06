@@ -1,4 +1,12 @@
-Saha is a static website generation and serving tool originally developed to serve the Haskell-KR (<https://haskell.kr/>) website. Questions, bug reports, and opinions are welcome.
+Saha is a static website generation and serving tool. Questions, bug reports, and opinions are welcome.
+
+## Features
+
+- **Compact**: You only wanted to set up some static website, but they ask you to install the whole Ruby/Node/etc. tool chain that occupies hundreds of megabytes and takes forever to install. Saha is under two megabytes of a single binary executable.
+- **Cool URIs**: Concise, meaningful, and maintainable. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
+- **Correct HTTP headers**: (content charset, Last-Modified and If-Modified-Since, etc.)
+- **High performance**: Thanks to [Warp](http://www.aosabook.org/en/posa/warp.html).
+- Written in **Haskell**.
 
 ## Install
 
@@ -6,7 +14,7 @@ Installation is easy!
 
 ### x64 Linux
 
-Zero dependency install (except `curl`) with only two megabytes of disk consumption:
+Zero dependency install (except `curl`) which takes only two megabytes:
 
 ```sh
 curl -L https://github.com/kinoru/saha/releases/latest \
@@ -16,7 +24,7 @@ curl -L https://github.com/kinoru/saha/releases/latest \
 && chmod +x ~/.local/bin/saha
 ```
 
-We assume that `~/.local/bin` is in your `$PATH`. The above also works as an update command as well.
+We assume that `~/.local/bin` is in your `$PATH`. The above also works as an update command.
 
 ### Other platforms
 
@@ -38,13 +46,6 @@ $ cd saha/example-website
 $ saha compile
 $ saha server
 ```
-
-## Project goals
-
-- Haskell. (because it was originally for a local Haskell community website)
-- Concise, meaningful, and maintainable URIs. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
-- Correct HTTP headers. (content charset, Last-Modified, etc.)
-- Future extensibility.
 
 ## General flow of setting up a Saha website
 
@@ -161,3 +162,10 @@ Example:
 ```sh
 saha server -h http://example.com
 ```
+
+## Todo
+
+- Logging
+- Supporting a better "not found" page
+- Per-directory templates
+- Compressed cache
