@@ -2,9 +2,9 @@ Saha is a static website generation and serving tool. Questions, bug reports, an
 
 ## Features
 
-- **Compact**: You only wanted to set up some static website, but they ask you to install the whole Ruby/Node/etc. tool chain that occupies hundreds of megabytes and takes forever to install. Saha is under two megabytes of a single binary executable.
+- **Compact**: You only wanted to set up some static website, but they ask you to install the whole Ruby/Node/etc. tool chain that occupies hundreds of megabytes and takes forever to install. Saha is a single binary executable under two megabytes.
 - **Cool URIs**: Concise, meaningful, and maintainable. [W3C has been giving you the idea of what good URIs look like](http://www.w3.org/Provider/Style/URI.html) since decades ago.
-- **Correct HTTP headers**: (content charset, Last-Modified and If-Modified-Since, etc.)
+- **Correct HTTP headers**: Content charset, Last-Modified and If-Modified-Since, etc.
 - **High performance**: Thanks to [Warp](http://www.aosabook.org/en/posa/warp.html).
 - Written in **Haskell**.
 
