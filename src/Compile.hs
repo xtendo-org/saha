@@ -27,6 +27,8 @@ stDSTDIR = "output"
 stTplPath :: FilePath
 stTplPath = "tpl/"
 
+data Conversion = Plaintext | CommonMark
+
 compile :: IO ()
 compile = do
     (mainTpl, mainTplMTime) <- getTemplate (stTplPath ++ "main.html")
@@ -49,18 +51,20 @@ compile = do
                 maxMTime = max mtime tplMTime
                 doTheCopy = do
                     createDirectoryIfMissing True $ stDSTDIR ++ dir
-                    writeOut maxMTime
-                        targetPath tpl headers content
+                    writeOut (hPlaintext headers)
+                        maxMTime targetPath tpl headers content
             targetMTime <- tryIOError $ getMTime targetPath
             case targetMTime of
                 Left _ -> doTheCopy
-                Right t ->  when (t < maxMTime) doTheCopy
+                Right t -> when (t < maxMTime) doTheCopy
   where
     checkPublicity headers action = case lookup "publicity" headers of
         Nothing -> action
         Just v -> unless (v == "hidden") action
     isMd path = (".md" :: FilePath) `isSuffixOf` path
     maybeAct m a = maybe a return m
+    hPlaintext headers = if ("plaintext", "plaintext") `elem` headers
+        then Plaintext else CommonMark
 
 getTemplate :: FilePath -> IO ([Template], EpochTime)
 getTemplate path = do
@@ -69,10 +73,10 @@ getTemplate path = do
     return (tpl, mtime)
 
 writeOut
-    :: EpochTime -> FilePath -> [Template] -> [(Text, Text)]
+    :: Conversion -> EpochTime -> FilePath -> [Template] -> [(Text, Text)]
     -> Text
     -> IO ()
-writeOut mtime path tpl headers content = do
+writeOut conv mtime path tpl headers content = do
     putStrLn path
     writeFile path $ mconcat $ map segConvert tpl
     setFileTimes path mtime mtime
@@ -80,7 +84,9 @@ writeOut mtime path tpl headers content = do
     segConvert seg = case seg of
         TextSegment t -> t
         Variable var -> if var == "content"
-            then commonmarkToHtml [optSmart] content
+            then case conv of
+                CommonMark -> commonmarkToHtml [optSmart] content
+                Plaintext -> content
             else fromMaybe (noSuchHeader var) $ lookup var headers
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 

@@ -88,10 +88,11 @@ Below is a typical Saha document.
 
 A document begins with headers, each having one key and one value. The key and the value are separated by a colon.
 
-Two special headers exist: `template` and `publicity`.
+Special headers exist: `template`, `publicity`, and `plaintext`.
 
 - `template` is supposed to be omitted. When explicitly set, it determines which template file should be used for templating this document. Otherwise it's `tpl/main.html`.
 - `publicity` is also supposed to be omitted. When the value is explicitly set to `hidden`, the document won't be processed at all. This is good for having unfinished documents or deleting documents from the web site without deleting the source file.
+- `plaintext` is also supposed to be omitted. When the value is explicitly set to `plaintext`, the CommonMark conversion won't be applied to the content, and the original plaintext will be directly inserted to the `\content\` part of the template.
 
 Any other header (like `title` or `author` in the example) is used for templating.
 
