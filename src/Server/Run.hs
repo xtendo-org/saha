@@ -77,12 +77,16 @@ serveNormal host req
         then "output/index.html"
         else mconcat ["output", url, ".html"]
     serveStatic
-        | ".jpg"  `B.isSuffixOf` url = serveRelURL "image/jpeg"
-        | ".png"  `B.isSuffixOf` url = serveRelURL "image/png"
-        | ".svg"  `B.isSuffixOf` url = serveRelURL "image/svg+xml"
-        | ".js"   `B.isSuffixOf` url = serveRelURL "application/javascript"
-        | ".css"  `B.isSuffixOf` url = serveRelURL "text/css"
-        | ".pdf"  `B.isSuffixOf` url = serveRelURL "application/pdf"
+        | ".jpg"    `B.isSuffixOf` url = serveRelURL "image/jpeg"
+        | ".png"    `B.isSuffixOf` url = serveRelURL "image/png"
+        | ".svg"    `B.isSuffixOf` url = serveRelURL "image/svg+xml"
+        | ".js"     `B.isSuffixOf` url = serveRelURL "application/javascript"
+        | ".css"    `B.isSuffixOf` url = serveRelURL "text/css"
+        | ".pdf"    `B.isSuffixOf` url = serveRelURL "application/pdf"
+        | ".eot"    `B.isSuffixOf` url = serveRelURL "application/vnd.ms-fontobject"
+        | ".ttf"    `B.isSuffixOf` url = serveRelURL "application/octet-stream"
+        | ".woff"   `B.isSuffixOf` url = serveRelURL "application/font-woff"
+        | ".woff2"  `B.isSuffixOf` url = serveRelURL "application/font-woff2"
         | otherwise = return notFound
     serveRelURL ctype = serve ctype (B.drop 1 url)
     serve ctype path = ioMaybe (return notFound) (return . useMTime)
