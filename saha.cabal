@@ -15,13 +15,13 @@ executable saha
   main-is:          Main.hs
   build-depends:
     attoparsec == 0.13.*,
-    cmark == 0.4.*,
+    cmark == 0.5.*,
     cmdargs == 0.10.*,
     http-date == 0.0.*,
     http-types == 0.9.*,
     network == 2.6.*,
-    wai == 3.0.*,
-    warp == 3.1.*,
+    wai == 3.*,
+    warp == 3.*,
 
     bytestring,
     directory,
@@ -29,7 +29,7 @@ executable saha
     text,
     time,
     unix,
-    base >=4.8 && <4.9
+    base >=4.9 && <5
   hs-source-dirs:   src
   ghc-options: -static -Wall -O2 -threaded -rtsopts
   default-language: Haskell2010
@@ -43,14 +43,14 @@ executable saha-server
   build-depends:
     bytestring == 0.10.*,
     cmdargs == 0.10.*,
-    cmark == 0.4.*,
+    cmark == 0.5.*,
     http-date == 0.0.*,
     http-types == 0.9.*,
     network == 2.6.*,
-    wai == 3.0.*,
-    warp == 3.1.*,
+    wai == 3.*,
+    warp == 3.*,
 
     directory,
     unix,
-    base >=4.8 && <4.9
+    base >=4.9 && <5
 
