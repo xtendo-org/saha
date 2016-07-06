@@ -13,7 +13,7 @@ import Data.ByteString.Lazy as LB (fromStrict)
 
 import System.IO.Error
 import Text.Read (readMaybe)
-import System.Posix.Files.ByteString (fileExist)
+import System.Posix.ByteString (RawFilePath, fileExist)
 
 import Network.HTTP.Types
 import qualified Network.Wai as Wai
@@ -29,16 +29,16 @@ import Server.ModifiedTime
 
 data OpenAt
     = OpenAtPort Warp.Port
-    | OpenAtUnixSocket FilePath
+    | OpenAtUnixSocket RawFilePath
 
 parseOpenAt :: String -> OpenAt
 parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
     Just p  -> OpenAtPort p
-    Nothing -> OpenAtUnixSocket s
+    Nothing -> OpenAtUnixSocket (B.pack s)
 
 instance Show OpenAt where
     show (OpenAtPort port) = "port " ++ show port
-    show (OpenAtUnixSocket path) = "Unix socket " ++ path
+    show (OpenAtUnixSocket path) = "Unix socket " ++ show path
 
 -- logic
 
@@ -56,10 +56,11 @@ run openAt debug absoluteHost = do
         Warp.defaultSettings
 
 app :: ByteString -> Wai.Application
-app absoluteHost req respond =
-    if isSafeURL $ Wai.rawPathInfo req
+app absoluteHost req respond = if isSafeURL url
     then serveNormal absoluteHost req >>= respond
     else respond notFound
+  where
+    url = Wai.rawPathInfo req
 
 serveNormal :: ByteString -> Wai.Request -> IO Wai.Response
 serveNormal host req
@@ -76,19 +77,9 @@ serveNormal host req
     htmlpath = if B.length url == 1
         then "output/index.html"
         else mconcat ["output", url, ".html"]
-    serveStatic
-        | ".jpg"    `B.isSuffixOf` url = serveRelURL "image/jpeg"
-        | ".png"    `B.isSuffixOf` url = serveRelURL "image/png"
-        | ".svg"    `B.isSuffixOf` url = serveRelURL "image/svg+xml"
-        | ".js"     `B.isSuffixOf` url = serveRelURL "application/javascript"
-        | ".css"    `B.isSuffixOf` url = serveRelURL "text/css"
-        | ".pdf"    `B.isSuffixOf` url = serveRelURL "application/pdf"
-        | ".eot"    `B.isSuffixOf` url = serveRelURL "application/vnd.ms-fontobject"
-        | ".ttf"    `B.isSuffixOf` url = serveRelURL "application/octet-stream"
-        | ".woff"   `B.isSuffixOf` url = serveRelURL "application/font-woff"
-        | ".woff2"  `B.isSuffixOf` url = serveRelURL "application/font-woff2"
-        | otherwise = return notFound
-    serveRelURL ctype = serve ctype (B.drop 1 url)
+    serveStatic = case mimetype (extension url) of
+        Just ct -> serve ct (B.drop 1 url)
+        Nothing -> return notFound
     serve ctype path = ioMaybe (return notFound) (return . useMTime)
         (getMTime path)
       where
@@ -99,11 +90,9 @@ serveNormal host req
                 , (hLastModified, formattedMTime mtime)
                 ]
                 (B.unpack path) Nothing
-    checkRedirect = do
-        exist <- fileExist (mconcat ["output", B.init url, ".html"])
-        return $ if exist
-            then redirectPermanent (mconcat [host, B.init url])
-            else notFound
+    checkRedirect = fileExist htmlpath >>= \e -> return $ if e
+        then redirectPermanent (mconcat [host, B.init url])
+        else notFound
 
 -- HTTP responses
 
@@ -157,3 +146,25 @@ urlChar c = or
     ]
   where
     n = ord c
+
+mimetype :: ByteString -> Maybe ByteString
+mimetype ext = case ext of
+    "jpg"   -> Just "image/jpeg"
+    "png"   -> Just "image/png"
+    "svg"   -> Just "image/svg+xml"
+    "js"    -> Just "application/javascript"
+    "css"   -> Just "text/css"
+    "pdf"   -> Just "application/pdf"
+    "eot"   -> Just "application/vnd.ms-fontobject"
+    "ttf"   -> Just "application/octet-stream"
+    "woff"  -> Just "application/font-woff"
+    "woff2" -> Just "application/font-woff2"
+    _       -> Nothing
+
+cExtensionLongest :: Int
+cExtensionLongest = 5
+
+extension :: ByteString -> ByteString
+extension path = snd $ B.breakEnd (== '.') $
+    B.drop (B.length path - cExtensionLongest) path
+

@@ -3,14 +3,21 @@ module Server.UnixSocket
     , unixSocket
     ) where
 
+import qualified Data.ByteString.Char8 as B
+import Control.Monad
 import System.IO.Error
-import System.Directory
 import Network.Socket
+import System.Posix.ByteString
 
-unixSocket :: FilePath -> IO Socket
+unixSocket :: RawFilePath -> IO Socket
 unixSocket path = do
-    catchIOError (removeFile path) (const $ return ())
+    tryRemoveFile path
     s <- socket AF_UNIX Stream defaultProtocol
-    bind s (SockAddrUnix path)
+    bind s (SockAddrUnix (B.unpack path))
     listen s maxListenQueue
     return s
+
+tryRemoveFile :: RawFilePath -> IO ()
+tryRemoveFile path = catchIOError (removeLink path) $
+    \ e -> unless (isDoesNotExistError e) $ ioError e
+
