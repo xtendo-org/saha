@@ -1,4 +1,4 @@
 dist/*
-output/*
+*/output/*
 *.swp
 .stack-work
