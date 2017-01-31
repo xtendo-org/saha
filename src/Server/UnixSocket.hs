@@ -14,6 +14,7 @@ unixSocket path = do
     tryRemoveFile path
     s <- socket AF_UNIX Stream defaultProtocol
     bind s (SockAddrUnix (B.unpack path))
+    setFileMode path accessModes
     listen s maxListenQueue
     return s
 
