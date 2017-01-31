@@ -17,7 +17,7 @@ Installation is easy!
 Zero dependency install (except `curl`) which takes only two megabytes:
 
 ```sh
-curl -L https://github.com/kinoru/saha/releases/latest \
+curl -L https://github.com/xtendo-org/saha/releases/latest \
 | grep "/saha/releases/download/" | head -n 1 \
 | sed -e "s/.*<a href=\"\(.*\)\" rel.*/https:\/\/github.com\1/g" \
 | xargs curl -L > ~/.local/bin/saha \
@@ -31,7 +31,7 @@ We assume that `~/.local/bin` is in your `$PATH`. The above also works as an upd
 [Stack](https://github.com/commercialhaskell/stack) is the recommended build tool for Saha.
 
 ```sh
-$ git clone https://github.com/kinoru/saha.git
+$ git clone https://github.com/xtendo-org/saha.git
 $ cd saha
 $ stack install
 ```
@@ -41,7 +41,7 @@ The plain old cabal-install should work as well. If it doesn't, please create a 
 ## Quickstart
 
 ```sh
-$ git clone https://github.com/kinoru/saha.git
+$ git clone https://github.com/xtendo-org/saha.git
 $ cd saha/example-website
 $ saha compile
 $ saha server
@@ -74,7 +74,7 @@ A Saha website project directory would have the following subdirectories:
 Below is a typical Saha document.
 
     title: Main page
-    author: Kinoru
+    author: XT
 
     This introductory paragraph is lorem ipsum dolor sit amet.
 

@@ -3,8 +3,8 @@ version:            0.1.0
 synopsis:           A simple web server
 license:            AGPL-3
 license-file:       LICENSE
-author:             Kinoru
-copyright:          Copyright (C) 2015 Kinoru
+author:             XT
+copyright:          Copyright (C) 2015-2017 XT
 category:           Web
 build-type:         Simple
 -- extra-source-files:
@@ -13,6 +13,13 @@ cabal-version:      >=1.18
 executable saha
   default-extensions:   OverloadedStrings
   main-is:          Main.hs
+  other-modules:
+    Compile
+    Parser
+    RecursiveContents
+    Server.ModifiedTime
+    Server.Run
+    Server.UnixSocket
   build-depends:
     attoparsec == 0.13.*,
     cmark == 0.5.*,
@@ -38,6 +45,10 @@ executable saha-server
   default-extensions:   OverloadedStrings
   main-is:          Server.hs
   hs-source-dirs:   src
+  other-modules:
+    Server.ModifiedTime
+    Server.Run
+    Server.UnixSocket
   ghc-options: -static -Wall -O2 -threaded -rtsopts
   default-language: Haskell2010
   build-depends:
