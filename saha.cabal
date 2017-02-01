@@ -1,13 +1,15 @@
 name:               saha
-version:            0.1.0
-synopsis:           A simple web server
+version:            0.2.0
+synopsis:           A simple server for static websites with cool URIs
 license:            AGPL-3
 license-file:       LICENSE
 author:             XT
 copyright:          Copyright (C) 2015-2017 XT
 category:           Web
 build-type:         Simple
--- extra-source-files:
+extra-source-files:
+  README.md
+  CHANGELOG.md
 cabal-version:      >=1.18
 
 executable saha
@@ -21,21 +23,20 @@ executable saha
     Server.Run
     Server.UnixSocket
   build-depends:
-    attoparsec == 0.13.*,
-    cmark == 0.5.*,
-    cmdargs == 0.10.*,
-    http-date == 0.0.*,
-    http-types == 0.9.*,
-    network == 2.6.*,
-    wai == 3.*,
-    warp == 3.*,
-
+    attoparsec,
     bytestring,
+    cmark,
+    cmdargs,
     directory,
     filepath,
+    http-date,
+    http-types,
+    network,
     text,
     time,
     unix,
+    wai,
+    warp,
     base >=4.9 && <5
   hs-source-dirs:   src
   ghc-options: -static -Wall -O2 -threaded -rtsopts
