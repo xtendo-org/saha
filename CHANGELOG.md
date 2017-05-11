@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.2.1 - 2017-05-11
+
+### Changed
+
+- Any file extension in static file serving is now supported.
+- Tilde (~) is now allowed in URLs.
+
 ## 0.2.0 - 2017-01-31
 
 ### Added

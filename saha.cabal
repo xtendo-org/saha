@@ -1,5 +1,5 @@
 name:               saha
-version:            0.2.0
+version:            0.2.1
 synopsis:           A simple server for static websites with cool URIs
 license:            AGPL-3
 license-file:       LICENSE
