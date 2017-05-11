@@ -77,9 +77,7 @@ serveNormal host req
     htmlpath = if B.length url == 1
         then "output/index.html"
         else mconcat ["output", url, ".html"]
-    serveStatic = case mimetype (extension url) of
-        Just ct -> serve ct (B.drop 1 url)
-        Nothing -> return notFound
+    serveStatic = serve (mimetype (extension url)) (B.drop 1 url)
     serve ctype path = ioMaybe (return notFound) (return . useMTime)
         (getMTime path)
       where
@@ -147,19 +145,19 @@ urlChar c = or
   where
     n = ord c
 
-mimetype :: ByteString -> Maybe ByteString
+mimetype :: ByteString -> ByteString
 mimetype ext = case ext of
-    "jpg"   -> Just "image/jpeg"
-    "png"   -> Just "image/png"
-    "svg"   -> Just "image/svg+xml"
-    "js"    -> Just "application/javascript"
-    "css"   -> Just "text/css"
-    "pdf"   -> Just "application/pdf"
-    "eot"   -> Just "application/vnd.ms-fontobject"
-    "ttf"   -> Just "application/octet-stream"
-    "woff"  -> Just "application/font-woff"
-    "woff2" -> Just "application/font-woff2"
-    _       -> Nothing
+    "jpg"   -> "image/jpeg"
+    "png"   -> "image/png"
+    "svg"   -> "image/svg+xml;charset=utf-8"
+    "js"    -> "application/javascript;charset=utf-8"
+    "css"   -> "text/css;charset=utf-8"
+    "pdf"   -> "application/pdf"
+    "eot"   -> "application/vnd.ms-fontobject"
+    "ttf"   -> "application/octet-stream"
+    "woff"  -> "application/font-woff"
+    "woff2" -> "application/font-woff2"
+    _       -> "application/octet-stream"
 
 cExtensionLongest :: Int
 cExtensionLongest = 5
