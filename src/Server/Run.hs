@@ -140,7 +140,7 @@ urlChar c = or
     [ ord 'a' <= n && n <= ord 'z'
     , ord 'A' <= n && n <= ord 'Z'
     , ord '0' <= n && n <= ord '9'
-    , c `B.elem` "-_./"
+    , c `B.elem` "-_./~"
     ]
   where
     n = ord c
