@@ -1,11 +1,11 @@
-module Main where
+module Saha (main) where
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import System.Console.CmdArgs.Explicit
 
-import Compile
-import Server.Run
+import Saha.Compile
+import Saha.Server.Run
 
 data Command
     = CmdCompile

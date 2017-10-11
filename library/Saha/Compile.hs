@@ -1,4 +1,4 @@
-module Compile where
+module Saha.Compile where
 
 import Data.Maybe
 import Control.Monad
@@ -15,8 +15,8 @@ import System.IO.Error
 
 import CMark
 
-import Parser
-import RecursiveContents
+import Saha.Parser
+import Saha.RecursiveContents
 
 stSRCDIR :: FilePath
 stSRCDIR = "data"

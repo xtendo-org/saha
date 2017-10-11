@@ -1,4 +1,4 @@
-module Parser
+module Saha.Parser
     ( source
     , template
     , Template(..)

@@ -1,4 +1,4 @@
-module RecursiveContents
+module Saha.RecursiveContents
     ( getRecursiveContents
     ) where
 

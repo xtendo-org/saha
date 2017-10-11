@@ -1,0 +1,68 @@
+name: saha
+version: '0.2.1'
+synopsis: A simple server for static websites with cool URIs
+category: Web
+author: XT
+copyright: Copyright (C) 2015-2017 XT
+license: AGPL-3
+extra-source-files:
+- README.md
+- CHANGELOG.md
+default-extensions:
+- OverloadedStrings
+
+ghc-options:
+- -static
+- -Wall
+- -O2
+- -threaded
+- -rtsopts
+- -static
+- -Wall
+- -O2
+- -threaded
+- -rtsopts
+
+library:
+  dependencies:
+  - attoparsec
+  - bytestring
+  - cmark
+  - cmdargs
+  - directory
+  - filepath
+  - http-date
+  - http-types
+  - network
+  - text
+  - time
+  - unix
+  - wai
+  - warp
+  - base
+  - bytestring
+  - cmdargs
+  - cmark
+  - http-date
+  - http-types
+  - network
+  - wai
+  - warp
+  - directory
+  - unix
+  - base
+  source-dirs: library
+
+executables:
+  saha:
+    dependencies:
+    - base
+    - saha
+    main: Main.hs
+    source-dirs: executable/saha
+  saha-server:
+    dependencies:
+    - base
+    - saha
+    main: Main.hs
+    source-dirs: executable/saha-server

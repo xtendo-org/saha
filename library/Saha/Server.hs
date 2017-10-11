@@ -1,10 +1,10 @@
-module Main where
+module Saha.Server (main) where
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import System.Console.CmdArgs.Explicit
 
-import Server.Run
+import Saha.Server.Run
 
 data Command
     = CmdRun

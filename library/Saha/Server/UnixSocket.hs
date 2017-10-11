@@ -1,4 +1,4 @@
-module Server.UnixSocket
+module Saha.Server.UnixSocket
     ( Socket
     , unixSocket
     ) where
