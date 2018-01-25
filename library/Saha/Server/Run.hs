@@ -9,8 +9,9 @@ import Prelude hiding ((++))
 import Data.Char
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import Data.ByteString.Lazy as LB (fromStrict)
+import qualified Data.ByteString.Lazy as LB
 
+import System.IO
 import System.IO.Error
 import Text.Read (readMaybe)
 import System.Posix.ByteString (RawFilePath, fileExist)
@@ -21,6 +22,9 @@ import qualified Network.Wai.Handler.Warp as Warp
 
 import Saha.Server.UnixSocket
 import Saha.Server.ModifiedTime
+import Saha.Constants
+
+import Data.ByteString.RawFilePath as B (withFile)
 
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
@@ -62,6 +66,8 @@ app absoluteHost req respond = if isSafeURL url
   where
     url = Wai.rawPathInfo req
 
+data FileBeginning = RedirectBeginning ByteString | OtherFileBeginning
+
 serveNormal :: ByteString -> Wai.Request -> IO Wai.Response
 serveNormal host req
     | "/static/" `B.isPrefixOf` url = serveStatic
@@ -78,19 +84,31 @@ serveNormal host req
         then "output/index.html"
         else mconcat ["output", url, ".html"]
     serveStatic = serve (mimetype (extension url)) (B.drop 1 url)
-    serve ctype path = ioMaybe (return notFound) (return . useMTime)
+    serve ctype path = ioMaybe (return notFound) useMTime
         (getMTime path)
       where
+        -- useMTime :: EpochTime -> IO Wai.Response
         useMTime mtime = case modifiedSince req mtime of
-            NotModified -> notModified
-            Modified -> Wai.responseFile status200
-                [ (hContentType, ctype)
-                , (hLastModified, formattedMTime mtime)
-                ]
-                (B.unpack path) Nothing
+            NotModified -> return notModified
+            Modified -> checkFileHeader path >>= \ case
+                RedirectBeginning tgt -> return $ redirectTemporarily tgt
+                OtherFileBeginning -> return $ Wai.responseFile status200
+                    [ (hContentType, ctype)
+                    , (hLastModified, formattedMTime mtime)
+                    ]
+                    (B.unpack path) Nothing
     checkRedirect = fileExist htmlpath >>= \e -> return $ if e
-        then redirectPermanent (mconcat [host, B.init url])
+        then redirectPermanently (mconcat [host, B.init url])
         else notFound
+
+checkFileHeader :: ByteString -> IO FileBeginning
+checkFileHeader path = B.withFile path ReadMode $ \ h -> do
+    redirectHeader <- B.hGet h (B.length redirectMagicBytes)
+    if redirectHeader == redirectMagicBytes
+    then do
+        url <- B.hGetContents h
+        return $ RedirectBeginning url
+    else return OtherFileBeginning
 
 -- HTTP responses
 
@@ -102,8 +120,8 @@ notFound = Wai.responseLBS status404
 notModified :: Wai.Response
 notModified = Wai.responseLBS status304 [] ""
 
-redirectPermanent :: ByteString -> Wai.Response
-redirectPermanent path = Wai.responseLBS status301
+redirectAbstract :: Status -> ByteString -> Wai.Response
+redirectAbstract status path = Wai.responseLBS status
     [ (hContentType, "text/html")
     , (hLocation, path)
     ] $ mconcat
@@ -112,7 +130,13 @@ redirectPermanent path = Wai.responseLBS status301
         , "</a></body></html>"
         ]
   where
-    lpath = fromStrict path
+    lpath = LB.fromStrict path
+
+redirectPermanently :: ByteString -> Wai.Response
+redirectPermanently = redirectAbstract status301
+
+redirectTemporarily :: ByteString -> Wai.Response
+redirectTemporarily = redirectAbstract status302
 
 -- utilities
 
@@ -165,4 +189,3 @@ cExtensionLongest = 5
 extension :: ByteString -> ByteString
 extension path = snd $ B.breakEnd (== '.') $
     B.drop (B.length path - cExtensionLongest) path
-

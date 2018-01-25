@@ -10,22 +10,20 @@ extra-source-files:
 - CHANGELOG.md
 default-extensions:
 - OverloadedStrings
+- LambdaCase
 
 ghc-options:
-- -static
-- -Wall
 - -O2
-- -threaded
+- -Wall
 - -rtsopts
 - -static
-- -Wall
-- -O2
 - -threaded
-- -rtsopts
 
 library:
   dependencies:
+
   - attoparsec
+  - base
   - bytestring
   - cmark
   - cmdargs
@@ -34,23 +32,13 @@ library:
   - http-date
   - http-types
   - network
+  - rawfilepath
   - text
   - time
   - unix
   - wai
   - warp
-  - base
-  - bytestring
-  - cmdargs
-  - cmark
-  - http-date
-  - http-types
-  - network
-  - wai
-  - warp
-  - directory
-  - unix
-  - base
+
   source-dirs: library
 
 executables:

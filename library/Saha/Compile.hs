@@ -15,6 +15,7 @@ import System.IO.Error
 
 import CMark
 
+import Saha.Constants
 import Saha.Parser
 import Saha.RecursiveContents
 
@@ -27,7 +28,7 @@ stDSTDIR = "output"
 stTplPath :: FilePath
 stTplPath = "tpl/"
 
-data Conversion = Plaintext | CommonMark
+data Conversion = Plaintext | Redirect Text | CommonMark
 
 compile :: IO ()
 compile = do
@@ -63,8 +64,11 @@ compile = do
         Just v -> unless (v == "hidden") action
     isMd path = (".md" :: FilePath) `isSuffixOf` path
     maybeAct m a = maybe a return m
-    hPlaintext headers = if ("plaintext", "plaintext") `elem` headers
-        then Plaintext else CommonMark
+    hPlaintext headers
+        | ("plaintext", "plaintext") `elem` headers = Plaintext
+        | otherwise = case lookup "redirect" headers of
+            Just url -> Redirect url
+            _ -> CommonMark
 
 getTemplate :: FilePath -> IO ([Template], EpochTime)
 getTemplate path = do
@@ -78,7 +82,9 @@ writeOut
     -> IO ()
 writeOut conv mtime path tpl headers content = do
     putStrLn path
-    writeFile path $ mconcat $ map segConvert tpl
+    writeFile path $ mconcat $ case conv of
+        Redirect url -> [redirectMagicText, url]
+        _ -> map segConvert tpl
     setFileTimes path mtime mtime
   where
     segConvert seg = case seg of
@@ -86,7 +92,7 @@ writeOut conv mtime path tpl headers content = do
         Variable var -> if var == "content"
             then case conv of
                 CommonMark -> commonmarkToHtml [optSmart] content
-                Plaintext -> content
+                _ -> content
             else fromMaybe (noSuchHeader var) $ lookup var headers
     noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 
