@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Added
+
+- Special header `redirect` which allows redirect response (HTTP 301 Moved).
+
 ## 0.2.1 - 2017-05-11
 
 ### Changed

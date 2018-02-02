@@ -88,11 +88,12 @@ Below is a typical Saha document.
 
 A document begins with headers, each having one key and one value. The key and the value are separated by a colon.
 
-Special headers exist: `template`, `publicity`, and `plaintext`.
+Special headers exist: `template`, `publicity`, `plaintext`, and `redirect`.
 
 - `template` is supposed to be omitted. When explicitly set, it determines which template file should be used for templating this document. Otherwise it's `tpl/main.html`.
 - `publicity` is also supposed to be omitted. When the value is explicitly set to `hidden`, the document won't be processed at all. This is good for having unfinished documents or deleting documents from the web site without deleting the source file.
 - `plaintext` is also supposed to be omitted. When the value is explicitly set to `plaintext`, the CommonMark conversion won't be applied to the content, and the original plaintext will be directly inserted to the `\content\` part of the template.
+- `redirect` is also supposed to be omitted. When the value is explicitly set to a URL, It does what you expect to do: Send HTTP 301 Moved response to the client. For example, when the content of `data/article/sample.md` is `redirect: https://example.com/blah`, any request to <https://example.com/article/sample> will be redirected to <https://example.com/blah>.
 
 Any other header (like `title` or `author` in the example) is used for templating.
 
