@@ -32,69 +32,69 @@ data Conversion = Plaintext | Redirect Text | CommonMark
 
 compile :: IO ()
 compile = do
-    (mainTpl, mainTplMTime) <- getTemplate (stTplPath ++ "main.html")
-    files <- getRecursiveContents stSRCDIR
-    forM_ files $ \ path -> when (isMd path) $ do
-        let
-            commonPath = dropExtension $ drop (length stSRCDIR) path
-            dir = fst $ splitFileName commonPath
-            targetPath = stDSTDIR ++ commonPath ++ ".html"
-        mtime <- getMTime path
-        fullText <- readFile path
-        (headers, content) <- maybeAct (source fullText) $ do
-            print path
-            error "source file header parsing failed"
-        checkPublicity headers $ do
-            (tpl, tplMTime) <- case lookup "template" headers of
-                Nothing -> return (mainTpl, mainTplMTime)
-                Just v -> getTemplate (stTplPath ++ unpack v)
-            let
-                maxMTime = max mtime tplMTime
-                doTheCopy = do
-                    createDirectoryIfMissing True $ stDSTDIR ++ dir
-                    writeOut (hPlaintext headers)
-                        maxMTime targetPath tpl headers content
-            targetMTime <- tryIOError $ getMTime targetPath
-            case targetMTime of
-                Left _ -> doTheCopy
-                Right t -> when (t < maxMTime) doTheCopy
-  where
-    checkPublicity headers action = case lookup "publicity" headers of
-        Nothing -> action
-        Just v -> unless (v == "hidden") action
-    isMd path = (".md" :: FilePath) `isSuffixOf` path
-    maybeAct m a = maybe a return m
-    hPlaintext headers
-        | ("plaintext", "plaintext") `elem` headers = Plaintext
-        | otherwise = case lookup "redirect" headers of
-            Just url -> Redirect url
-            _ -> CommonMark
+  (mainTpl, mainTplMTime) <- getTemplate (stTplPath ++ "main.html")
+  files <- getRecursiveContents stSRCDIR
+  forM_ files $ \ path -> when (isMd path) $ do
+    let
+      commonPath = dropExtension $ drop (length stSRCDIR) path
+      dir = fst $ splitFileName commonPath
+      targetPath = stDSTDIR ++ commonPath ++ ".html"
+    mtime <- getMTime path
+    fullText <- readFile path
+    (headers, content) <- maybeAct (source fullText) $ do
+      print path
+      error "source file header parsing failed"
+    checkPublicity headers $ do
+      (tpl, tplMTime) <- case lookup "template" headers of
+        Nothing -> return (mainTpl, mainTplMTime)
+        Just v -> getTemplate (stTplPath ++ unpack v)
+      let
+        maxMTime = max mtime tplMTime
+        doTheCopy = do
+          createDirectoryIfMissing True $ stDSTDIR ++ dir
+          writeOut (hPlaintext headers)
+            maxMTime targetPath tpl headers content
+      targetMTime <- tryIOError $ getMTime targetPath
+      case targetMTime of
+        Left _ -> doTheCopy
+        Right t -> when (t < maxMTime) doTheCopy
+ where
+  checkPublicity headers action = case lookup "publicity" headers of
+    Nothing -> action
+    Just v -> unless (v == "hidden") action
+  isMd path = (".md" :: FilePath) `isSuffixOf` path
+  maybeAct m a = maybe a return m
+  hPlaintext headers
+    | ("plaintext", "plaintext") `elem` headers = Plaintext
+    | otherwise = case lookup "redirect" headers of
+      Just url -> Redirect url
+      _ -> CommonMark
 
 getTemplate :: FilePath -> IO ([Template], EpochTime)
 getTemplate path = do
-    tpl <- template <$> readFile path
-    mtime <- getMTime path
-    return (tpl, mtime)
+  tpl <- template <$> readFile path
+  mtime <- getMTime path
+  return (tpl, mtime)
 
 writeOut
-    :: Conversion -> EpochTime -> FilePath -> [Template] -> [(Text, Text)]
-    -> Text
-    -> IO ()
+  :: Conversion -> EpochTime -> FilePath -> [Template] -> [(Text, Text)]
+  -> Text
+  -> IO ()
 writeOut conv mtime path tpl headers content = do
-    putStrLn path
-    writeFile path $ mconcat $ case conv of
-        Redirect url -> [redirectMagicText, url]
-        _ -> map segConvert tpl
-    setFileTimes path mtime mtime
-  where
-    segConvert seg = case seg of
-        TextSegment t -> t
-        Variable var -> if var == "content"
-            then case conv of
-                CommonMark -> commonmarkToHtml [optSmart] content
-                _ -> content
-            else fromMaybe (noSuchHeader var) $ lookup var headers
-    noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
+  putStrLn path
+  writeFile path $ mconcat $ case conv of
+    Redirect url -> [redirectMagicText, url]
+    _ -> map segConvert tpl
+  setFileTimes path mtime mtime
+ where
+  segConvert seg = case seg of
+    TextSegment t -> t
+    Variable var -> if var == "content"
+      then case conv of
+        CommonMark -> commonmarkToHtml [optSmart] content
+        _ -> content
+      else fromMaybe (noSuchHeader var) $ lookup var headers
+  noSuchHeader var = error $ "var " ++ show var ++ " not found in headers"
 
 getMTime :: FilePath -> IO EpochTime
 getMTime = fmap modificationTime . getFileStatus

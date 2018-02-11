@@ -7,38 +7,38 @@ import System.Console.CmdArgs.Explicit
 import Saha.Server.Run
 
 data Command
-    = CmdRun
-        OpenAt
-        Bool -- debug mode?
-        ByteString -- absolute host for redirecting
-    | CmdHelp
+  = CmdRun
+    OpenAt
+    Bool -- debug mode?
+    ByteString -- absolute host for redirecting
+  | CmdHelp
 
 arguments :: Mode Command
 arguments = mode "server" (CmdRun (OpenAtPort 3000) False "")
-    "launch HTTP server"
-    (flagArg (\ _ c -> Right c) "")
-    [ flagReq ["socket", "s"]
-        socketUpd "PORT_OR_PATH" "Port number or Unix domain socket path"
-    , flagReq ["host", "h"]
-        hostUpd "HOST" "Absolute host address (for correct redirection)"
-    , flagNone ["debug", "d"]
-        debugUpd "Run the server in the debug mode or not"
-    , flagHelpSimple (const CmdHelp)
-    ]
-  where
-    socketUpd s (CmdRun _ d h) = Right $ CmdRun (parseOpenAt s) d h
-    socketUpd _ x = Right x
-    hostUpd arg (CmdRun s d _) = Right $ CmdRun s d host
-      where
-        host = if B.last b == '/' then B.init b else b
-        b = B.pack arg
-    hostUpd _ x = Right x
-    debugUpd (CmdRun s _ h) = CmdRun s True h
-    debugUpd x = x
+  "launch HTTP server"
+  (flagArg (\ _ c -> Right c) "")
+  [ flagReq ["socket", "s"]
+    socketUpd "PORT_OR_PATH" "Port number or Unix domain socket path"
+  , flagReq ["host", "h"]
+    hostUpd "HOST" "Absolute host address (for correct redirection)"
+  , flagNone ["debug", "d"]
+    debugUpd "Run the server in the debug mode or not"
+  , flagHelpSimple (const CmdHelp)
+  ]
+ where
+  socketUpd s (CmdRun _ d h) = Right $ CmdRun (parseOpenAt s) d h
+  socketUpd _ x = Right x
+  hostUpd arg (CmdRun s d _) = Right $ CmdRun s d host
+   where
+    host = if B.last b == '/' then B.init b else b
+    b = B.pack arg
+  hostUpd _ x = Right x
+  debugUpd (CmdRun s _ h) = CmdRun s True h
+  debugUpd x = x
 
 main :: IO ()
 main = do
-    args <- processArgs arguments
-    case args of
-        CmdHelp -> print $ helpText [] HelpFormatDefault arguments
-        CmdRun openAt debug host -> run openAt debug host
+  args <- processArgs arguments
+  case args of
+    CmdHelp -> print $ helpText [] HelpFormatDefault arguments
+    CmdRun openAt debug host -> run openAt debug host

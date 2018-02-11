@@ -1,10 +1,10 @@
 module Saha.Server.ModifiedTime
-    ( Modified(..)
-    , EpochTime
-    , getMTime
-    , formattedMTime
-    , modifiedSince
-    ) where
+  ( Modified(..)
+  , EpochTime
+  , getMTime
+  , formattedMTime
+  , modifiedSince
+  ) where
 
 import Data.ByteString (ByteString)
 import System.Posix.Types (EpochTime)
@@ -23,11 +23,11 @@ formattedMTime = formatHTTPDate . epochTimeToHTTPDate
 
 modifiedSince :: Request -> EpochTime -> Modified
 modifiedSince req mtime = case since of
+  Nothing -> Modified
+  Just rawReqTime -> case parseHTTPDate rawReqTime of
     Nothing -> Modified
-    Just rawReqTime -> case parseHTTPDate rawReqTime of
-        Nothing -> Modified
-        Just reqTime -> if reqTime < epochTimeToHTTPDate mtime
-            then Modified
-            else NotModified
-  where
-    since = lookup hIfModifiedSince (requestHeaders req)
+    Just reqTime -> if reqTime < epochTimeToHTTPDate mtime
+      then Modified
+      else NotModified
+ where
+  since = lookup hIfModifiedSince (requestHeaders req)

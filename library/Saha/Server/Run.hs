@@ -1,8 +1,8 @@
 module Saha.Server.Run
-    ( run
-    , OpenAt(..)
-    , parseOpenAt
-    ) where
+  ( run
+  , OpenAt(..)
+  , parseOpenAt
+  ) where
 
 import Prelude hiding ((++))
 
@@ -32,105 +32,105 @@ import Data.ByteString.RawFilePath as B (withFile)
 -- OpenAt configuration
 
 data OpenAt
-    = OpenAtPort Warp.Port
-    | OpenAtUnixSocket RawFilePath
+  = OpenAtPort Warp.Port
+  | OpenAtUnixSocket RawFilePath
 
 parseOpenAt :: String -> OpenAt
 parseOpenAt s = case readMaybe s :: Maybe Warp.Port of
-    Just p  -> OpenAtPort p
-    Nothing -> OpenAtUnixSocket (B.pack s)
+  Just p -> OpenAtPort p
+  Nothing -> OpenAtUnixSocket (B.pack s)
 
 instance Show OpenAt where
-    show (OpenAtPort port) = "port " ++ show port
-    show (OpenAtUnixSocket path) = "Unix socket " ++ show path
+  show (OpenAtPort port) = "port " ++ show port
+  show (OpenAtUnixSocket path) = "Unix socket " ++ show path
 
 -- logic
 
 run :: OpenAt -> Bool -> ByteString -> IO ()
 run openAt debug absoluteHost = do
-    B.putStrLn $ mconcat ["Saha is opening at ", B.pack (show openAt), ".."]
-    case openAt of
-        OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) appWithHost
-        OpenAtUnixSocket s -> do
-            sock <- unixSocket s
-            Warp.runSettingsSocket settings sock appWithHost
-  where
-    appWithHost = app absoluteHost
-    settings = Warp.setFdCacheDuration (if debug then 0 else 60)
-        Warp.defaultSettings
+  B.putStrLn $ mconcat ["Saha is opening at ", B.pack (show openAt), ".."]
+  case openAt of
+    OpenAtPort p -> Warp.runSettings (Warp.setPort p settings) appWithHost
+    OpenAtUnixSocket s -> do
+      sock <- unixSocket s
+      Warp.runSettingsSocket settings sock appWithHost
+ where
+  appWithHost = app absoluteHost
+  settings = Warp.setFdCacheDuration (if debug then 0 else 60)
+    Warp.defaultSettings
 
 app :: ByteString -> Wai.Application
 app absoluteHost req respond = if isSafeURL url
-    then serveNormal absoluteHost req >>= respond
-    else respond notFound
-  where
-    url = Wai.rawPathInfo req
+  then serveNormal absoluteHost req >>= respond
+  else respond notFound
+ where
+  url = Wai.rawPathInfo req
 
 data FileBeginning = RedirectBeginning ByteString | OtherFileBeginning
 
 serveNormal :: ByteString -> Wai.Request -> IO Wai.Response
 serveNormal host req
-    | "/static/" `B.isPrefixOf` url = serveStatic
-    | url == "/favicon.ico" = serve
-        "image/vnd.microsoft.icon" "static/img/favicon.ico"
-    | url == "/robots.txt" = serve
-        "text/plain" "robots.txt"
-    | B.length url /= 1 && B.last url == '/' = checkRedirect
-    | otherwise = serve htmlctype htmlpath
-  where
-    url = Wai.rawPathInfo req
-    htmlctype = "text/html; charset=utf-8"
-    htmlpath = if B.length url == 1
-        then "output/index.html"
-        else mconcat ["output", url, ".html"]
-    serveStatic = serve (mimetype (extension url)) (B.drop 1 url)
-    serve ctype path = ioMaybe (return notFound) useMTime
-        (getMTime path)
-      where
-        -- useMTime :: EpochTime -> IO Wai.Response
-        useMTime mtime = case modifiedSince req mtime of
-            NotModified -> return notModified
-            Modified -> checkFileHeader path >>= \ case
-                RedirectBeginning tgt -> return $ redirectTemporarily tgt
-                OtherFileBeginning -> return $ Wai.responseFile status200
-                    [ (hContentType, ctype)
-                    , (hLastModified, formattedMTime mtime)
-                    ]
-                    (B.unpack path) Nothing
-    checkRedirect = fileExist htmlpath >>= \e -> return $ if e
-        then redirectPermanently (mconcat [host, B.init url])
-        else notFound
+  | "/static/" `B.isPrefixOf` url = serveStatic
+  | url == "/favicon.ico" = serve
+    "image/vnd.microsoft.icon" "static/img/favicon.ico"
+  | url == "/robots.txt" = serve
+    "text/plain" "robots.txt"
+  | B.length url /= 1 && B.last url == '/' = checkRedirect
+  | otherwise = serve htmlctype htmlpath
+ where
+  url = Wai.rawPathInfo req
+  htmlctype = "text/html; charset=utf-8"
+  htmlpath = if B.length url == 1
+    then "output/index.html"
+    else mconcat ["output", url, ".html"]
+  serveStatic = serve (mimetype (extension url)) (B.drop 1 url)
+  serve ctype path = ioMaybe (return notFound) useMTime
+    (getMTime path)
+   where
+    -- useMTime :: EpochTime -> IO Wai.Response
+    useMTime mtime = case modifiedSince req mtime of
+      NotModified -> return notModified
+      Modified -> checkFileHeader path >>= \ case
+        RedirectBeginning tgt -> return $ redirectTemporarily tgt
+        OtherFileBeginning -> return $ Wai.responseFile status200
+          [ (hContentType, ctype)
+          , (hLastModified, formattedMTime mtime)
+          ]
+          (B.unpack path) Nothing
+  checkRedirect = fileExist htmlpath >>= \e -> return $ if e
+    then redirectPermanently (mconcat [host, B.init url])
+    else notFound
 
 checkFileHeader :: ByteString -> IO FileBeginning
 checkFileHeader path = B.withFile path ReadMode $ \ h -> do
-    redirectHeader <- B.hGet h (B.length redirectMagicBytes)
-    if redirectHeader == redirectMagicBytes
-    then do
-        url <- B.hGetContents h
-        return $ RedirectBeginning url
-    else return OtherFileBeginning
+  redirectHeader <- B.hGet h (B.length redirectMagicBytes)
+  if redirectHeader == redirectMagicBytes
+  then do
+    url <- B.hGetContents h
+    return $ RedirectBeginning url
+  else return OtherFileBeginning
 
 -- HTTP responses
 
 notFound :: Wai.Response
 notFound = Wai.responseLBS status404
-    [(hContentType, "text/plain")]
-    "Page not found"
+  [(hContentType, "text/plain")]
+  "Page not found"
 
 notModified :: Wai.Response
 notModified = Wai.responseLBS status304 [] ""
 
 redirectAbstract :: Status -> ByteString -> Wai.Response
 redirectAbstract status path = Wai.responseLBS status
-    [ (hContentType, "text/html")
-    , (hLocation, path)
-    ] $ mconcat
-        [ "<html><head><title>Moved</title></head><body>"
-        , "Redirect to: <a href=\"" , lpath , "\">" , lpath
-        , "</a></body></html>"
-        ]
-  where
-    lpath = LB.fromStrict path
+  [ (hContentType, "text/html")
+  , (hLocation, path)
+  ] $ mconcat
+    [ "<html><head><title>Moved</title></head><body>"
+    , "Redirect to: <a href=\"" , lpath , "\">" , lpath
+    , "</a></body></html>"
+    ]
+ where
+  lpath = LB.fromStrict path
 
 redirectPermanently :: ByteString -> Wai.Response
 redirectPermanently = redirectAbstract status301
@@ -141,51 +141,51 @@ redirectTemporarily = redirectAbstract status302
 -- utilities
 
 ioMaybe
-    :: IO b         -- what to do on error
-    -> (a -> IO b)  -- what to do on no error
-    -> IO a         -- original action
-    -> IO b
+  :: IO b -- what to do on error
+  -> (a -> IO b) -- what to do on no error
+  -> IO a -- original action
+  -> IO b
 ioMaybe onError normally action = do
-    tried <- tryIOError action
-    case tried of
-        Left _ -> onError
-        Right v -> normally v
+  tried <- tryIOError action
+  case tried of
+    Left _ -> onError
+    Right v -> normally v
 
 isSafeURL :: ByteString -> Bool
 isSafeURL url = and
-    [ B.all urlChar url
-    , not $ "//" `B.isInfixOf` url
-    , not $ "../" `B.isInfixOf` url
-    , not $ ".." `B.isSuffixOf` url
-    ]
+  [ B.all urlChar url
+  , not $ "//" `B.isInfixOf` url
+  , not $ "../" `B.isInfixOf` url
+  , not $ ".." `B.isSuffixOf` url
+  ]
 
 urlChar :: Char -> Bool
 urlChar c = or
-    [ ord 'a' <= n && n <= ord 'z'
-    , ord 'A' <= n && n <= ord 'Z'
-    , ord '0' <= n && n <= ord '9'
-    , c `B.elem` "-_./~"
-    ]
-  where
-    n = ord c
+  [ ord 'a' <= n && n <= ord 'z'
+  , ord 'A' <= n && n <= ord 'Z'
+  , ord '0' <= n && n <= ord '9'
+  , c `B.elem` "-_./~"
+  ]
+ where
+  n = ord c
 
 mimetype :: ByteString -> ByteString
 mimetype ext = case ext of
-    "jpg"   -> "image/jpeg"
-    "png"   -> "image/png"
-    "svg"   -> "image/svg+xml;charset=utf-8"
-    "js"    -> "application/javascript;charset=utf-8"
-    "css"   -> "text/css;charset=utf-8"
-    "pdf"   -> "application/pdf"
-    "eot"   -> "application/vnd.ms-fontobject"
-    "ttf"   -> "application/octet-stream"
-    "woff"  -> "application/font-woff"
-    "woff2" -> "application/font-woff2"
-    _       -> "application/octet-stream"
+  "jpg"   -> "image/jpeg"
+  "png"   -> "image/png"
+  "svg"   -> "image/svg+xml;charset=utf-8"
+  "js"    -> "application/javascript;charset=utf-8"
+  "css"   -> "text/css;charset=utf-8"
+  "pdf"   -> "application/pdf"
+  "eot"   -> "application/vnd.ms-fontobject"
+  "ttf"   -> "application/octet-stream"
+  "woff"  -> "application/font-woff"
+  "woff2" -> "application/font-woff2"
+  _       -> "application/octet-stream"
 
 cExtensionLongest :: Int
 cExtensionLongest = 5
 
 extension :: ByteString -> ByteString
 extension path = snd $ B.breakEnd (== '.') $
-    B.drop (B.length path - cExtensionLongest) path
+  B.drop (B.length path - cExtensionLongest) path
