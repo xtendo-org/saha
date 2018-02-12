@@ -171,6 +171,7 @@ urlChar c = or
 
 mimetype :: ByteString -> ByteString
 mimetype ext = case ext of
+  "gif"   -> "image/gif"
   "jpg"   -> "image/jpeg"
   "png"   -> "image/png"
   "svg"   -> "image/svg+xml;charset=utf-8"

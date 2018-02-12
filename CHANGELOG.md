@@ -6,6 +6,10 @@
 
 - Special header `redirect` which allows redirect response (HTTP 301 Moved).
 
+### Fixed
+
+- Correct Content-Type header for GIF files.
+
 ## 0.2.1 - 2017-05-11
 
 ### Changed
