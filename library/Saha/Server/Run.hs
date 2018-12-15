@@ -105,9 +105,7 @@ checkFileHeader :: ByteString -> IO FileBeginning
 checkFileHeader path = B.withFile path ReadMode $ \ h -> do
   redirectHeader <- B.hGet h (B.length redirectMagicBytes)
   if redirectHeader == redirectMagicBytes
-  then do
-    url <- B.hGetContents h
-    return $ RedirectBeginning url
+  then RedirectBeginning <$> B.hGetContents h
   else return OtherFileBeginning
 
 -- HTTP responses
@@ -171,6 +169,7 @@ urlChar c = or
 
 mimetype :: ByteString -> ByteString
 mimetype ext = case ext of
+  "txt"   -> "text/plain;charset=utf-8"
   "gif"   -> "image/gif"
   "jpg"   -> "image/jpeg"
   "png"   -> "image/png"
