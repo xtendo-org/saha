@@ -33,7 +33,7 @@ We assume that `~/.local/bin` is in your `$PATH`. The above also works as an upd
 ```sh
 $ git clone https://github.com/xtendo-org/saha.git
 $ cd saha
-$ stack install
+$ stack install --docker
 ```
 
 The plain old cabal-install should work as well. If it doesn't, please create a new issue and report to us.

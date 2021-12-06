@@ -8,7 +8,8 @@
 
 ### Fixed
 
-- Correct Content-Type header for GIF files.
+- Correct Content-Type header for GIF and TXT files.
+- Apply completely static build: Change the Stackage curation to LTS. Build with `stack build --docker`.
 
 ## 0.2.1 - 2017-05-11
 
